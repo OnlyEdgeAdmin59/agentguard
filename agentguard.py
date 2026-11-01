@@ -206,5 +206,10 @@ def main(argv: list[str]) -> int:
     return COMMANDS[argv[1]](Path(argv[2]))
 
 
-if __name__ == "__main__":
+def run() -> None:
+    """Punto de entrada del comando `agentguard` instalado con pip."""
     sys.exit(main(sys.argv))
+
+
+if __name__ == "__main__":
+    run()

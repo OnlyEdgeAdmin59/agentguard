@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentguard-scan"
+version = "0.1.4"
+description = "Detecta tool poisoning y rug pulls en skills (SKILL.md) y conectores MCP de agentes de IA"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [{ name = "Vanguard Growth LLC" }]
+keywords = ["mcp", "ai-agents", "security", "prompt-injection", "tool-poisoning"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+  "Environment :: Console",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/OnlyEdgeAdmin59/agentguard"
+Issues = "https://github.com/OnlyEdgeAdmin59/agentguard/issues"
+
+[project.scripts]
+agentguard = "agentguard:run"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["agentguard.py"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["agentguard.py", "README.md", "LICENSE", "SECURITY.md", "pyproject.toml"]
