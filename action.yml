@@ -1,4 +1,4 @@
-name: "AgentGuard MCP and Skill Scanner"
+name: "agentguard"
 description: "Detecta tool poisoning y rug pulls en skills (SKILL.md) y herramientas MCP"
 author: "Vanguard Growth LLC"
 branding:

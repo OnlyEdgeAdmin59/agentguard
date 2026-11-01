@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentguard-scan"
-version = "0.1.4"
+version = "0.1.5"
 description = "Detecta tool poisoning y rug pulls en skills (SKILL.md) y conectores MCP de agentes de IA"
 readme = "README.md"
 license = "Apache-2.0"

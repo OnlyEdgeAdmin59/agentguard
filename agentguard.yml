@@ -1,0 +1,13 @@
+# Copiar en .github/workflows/agentguard.yml del repo que se quiera proteger
+name: agentguard
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: OnlyEdgeAdmin59/agentguard@v0.1.2
+        with:
+          path: "."
