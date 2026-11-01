@@ -1,0 +1,38 @@
+name: "agentguard"
+description: "Detecta tool poisoning y rug pulls en skills (SKILL.md) y herramientas MCP"
+author: "Vanguard Growth LLC"
+branding:
+  icon: "shield"
+  color: "green"
+
+inputs:
+  path:
+    description: "Carpeta a revisar"
+    default: "."
+  verify:
+    description: "Comparar contra agentguard.lock.json si existe (true/false)"
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    # Sin acciones de terceros: usa el python3 del runner (menos superficie de ataque).
+    - name: agentguard scan
+      shell: bash
+      env:
+        AG_PATH: ${{ inputs.path }}
+        AG_VERIFY: ${{ inputs.verify }}
+      run: |
+        set +e
+        python3 "$GITHUB_ACTION_PATH/agentguard.py" scan "$AG_PATH" | tee /tmp/ag_scan.txt
+        scan=${PIPESTATUS[0]}
+        verify=0
+        if [ "$AG_VERIFY" = "true" ] && [ -f "$AG_PATH/agentguard.lock.json" ]; then
+          python3 "$GITHUB_ACTION_PATH/agentguard.py" verify "$AG_PATH" | tee /tmp/ag_verify.txt
+          verify=${PIPESTATUS[0]}
+        fi
+        {
+          echo "## 🛡️ agentguard"
+          echo '```'; cat /tmp/ag_scan.txt; [ -f /tmp/ag_verify.txt ] && cat /tmp/ag_verify.txt; echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+        if [ "$scan" = "1" ] || [ "$verify" = "1" ]; then exit 1; fi
