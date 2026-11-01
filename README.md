@@ -5,7 +5,7 @@ Seguridad para agentes de IA: detecta instrucciones ocultas (tool poisoning) en 
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v4
-- uses: TU_USUARIO/agentguard@v0.1.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.1.0
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
 
