@@ -22,7 +22,7 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
      re.compile(r"ignore (all |any )?(previous|prior|above) (instructions|rules)", re.I)),
     ("ALTO", "Pide ocultar algo al usuario",
      re.compile(r"(do not|don't|never) (tell|inform|mention|reveal|show)[^.]{0,40}(user|human)", re.I)),
-    ("ALTO", "Acceso a secretos",
+    ("MEDIO", "Menciona secretos",
      re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json)", re.I)),
     ("ALTO", "Envío de datos a URL externa",
      re.compile(r"(send|post|upload|forward|exfiltrate)[^.]{0,60}https?://", re.I)),
@@ -54,6 +54,23 @@ def scan_text(text: str, source: str) -> list[Finding]:
             snippet = m.group(0).replace("\n", " ")[:80]
             findings.append(Finding(level, name, source, line, snippet))
     return findings
+
+
+COMBO_SECRET = "Menciona secretos"
+COMBO_SEND = "Envío de datos a URL externa"
+
+
+def escalate(findings: list[Finding]) -> list[Finding]:
+    """Un secreto solo es MEDIO; secreto + envío externo en la misma fuente es ALTO."""
+    by_source: dict[str, set[str]] = {}
+    for f in findings:
+        by_source.setdefault(f.source, set()).add(f.rule)
+    extra = []
+    for source, rules in by_source.items():
+        if COMBO_SECRET in rules and COMBO_SEND in rules:
+            first = next(f for f in findings if f.source == source and f.rule == COMBO_SECRET)
+            extra.append(Finding("ALTO", "Secreto + envío externo (posible robo)", source, first.line, first.snippet))
+    return findings + extra
 
 
 def texts_from_mcp_json(data: object, path: str = "") -> list[tuple[str, str]]:
@@ -139,7 +156,7 @@ def lock_path(target: Path) -> Path:
 
 def cmd_scan(target: Path) -> int:
     files = collect(target)
-    findings = [f for p in files for f in scan_file(p)]
+    findings = escalate([f for p in files for f in scan_file(p)])
     for f in findings:
         print(f"[{f.level}] {f.rule} — {f.source}:{f.line}  «{f.snippet}»")
         annotate(f.level, f.source, f.line, f"{f.rule}: {f.snippet}")
