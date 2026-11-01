@@ -33,6 +33,6 @@ runs:
         fi
         {
           echo "## 🛡️ agentguard"
-          echo '```'; cat /tmp/ag_scan.txt; [ -f /tmp/ag_verify.txt ] && cat /tmp/ag_verify.txt; echo '```'
+          echo '```'; grep -hv "^::" /tmp/ag_scan.txt /tmp/ag_verify.txt 2>/dev/null; echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
         if [ "$scan" = "1" ] || [ "$verify" = "1" ]; then exit 1; fi
