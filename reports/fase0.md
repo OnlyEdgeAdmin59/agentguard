@@ -1,6 +1,6 @@
 # Fase 0: medición del scanner actual contra el corpus
 
-Generado por `python scripts/medir_corpus.py`. Reglas del scanner **sin cambios** (solo se mide).
+Generado por `python scripts/medir_corpus.py` sobre `tests/corpus`.
 Alerta = al menos un hallazgo ALTO. En `rug_pull`: `lock` con la versión original y `verify` con la nueva.
 
 ## Resumen

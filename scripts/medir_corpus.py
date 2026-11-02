@@ -1,6 +1,6 @@
 """Mide el scanner actual contra tests/corpus y escribe reports/fase0.md.
 
-Uso: python scripts/medir_corpus.py [--out reports/fase0.md]
+Uso: python scripts/medir_corpus.py [--corpus tests/corpus] [--out reports/fase0.md] [--title "..."]
 Cada caso se escribe en una carpeta temporal tal como lo vería el scanner
 (tool MCP en JSON o SKILL.md) y se revisa con scan_file + escalate, igual que `scan`.
 Alerta = al menos un hallazgo ALTO (lo que hace fallar el CI).
@@ -63,8 +63,8 @@ def evaluate(case: dict) -> dict:
     return result
 
 
-def load(kind: str) -> list[dict]:
-    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted((CORPUS / kind).glob("*.json"))]
+def load(kind: str, corpus: Path = CORPUS) -> list[dict]:
+    return [json.loads(p.read_text(encoding="utf-8")) for p in sorted((corpus / kind).glob("*.json"))]
 
 
 def short(text: str, n: int = 110) -> str:
@@ -78,7 +78,8 @@ def rules(findings: list) -> str:
     return ", ".join(sorted({f"{f.level}: {f.rule}" for f in findings})) or "—"
 
 
-def report(benign: list[dict], malicious: list[dict]) -> str:
+def report(benign: list[dict], malicious: list[dict], title: str = "Fase 0: medición del scanner actual contra el corpus",
+           corpus: str = "tests/corpus") -> str:
     tp = sum(r["alerta"] for r in malicious)
     fn = len(malicious) - tp
     fp = sum(r["alerta"] for r in benign)
@@ -86,9 +87,9 @@ def report(benign: list[dict], malicious: list[dict]) -> str:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / len(malicious) if malicious else 0.0
     lines = [
-        "# Fase 0: medición del scanner actual contra el corpus",
+        f"# {title}",
         "",
-        "Generado por `python scripts/medir_corpus.py`. Reglas del scanner **sin cambios** (solo se mide).",
+        f"Generado por `python scripts/medir_corpus.py` sobre `{corpus}`.",
         "Alerta = al menos un hallazgo ALTO. En `rug_pull`: `lock` con la versión original y `verify` con la nueva.",
         "",
         "## Resumen",
@@ -154,12 +155,18 @@ def report(benign: list[dict], malicious: list[dict]) -> str:
 
 def main(argv: list[str]) -> int:
     out = ROOT / "reports" / "fase0.md"
+    corpus, title = CORPUS, "Fase 0: medición del scanner actual contra el corpus"
     if "--out" in argv:
         out = Path(argv[argv.index("--out") + 1])
-    benign = [evaluate(c) for c in load("benign")]
-    malicious = [evaluate(c) for c in load("malicious")]
+    if "--corpus" in argv:
+        corpus = Path(argv[argv.index("--corpus") + 1]).resolve()
+    if "--title" in argv:
+        title = argv[argv.index("--title") + 1]
+    benign = [evaluate(c) for c in load("benign", corpus)]
+    malicious = [evaluate(c) for c in load("malicious", corpus)]
+    label = corpus.relative_to(ROOT).as_posix() if corpus.is_relative_to(ROOT) else str(corpus)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(report(benign, malicious), encoding="utf-8")
+    out.write_text(report(benign, malicious, title, label), encoding="utf-8")
     tp = sum(r["alerta"] for r in malicious)
     fp = sum(r["alerta"] for r in benign)
     print(f"Detectados {tp}/{len(malicious)}, falsos positivos {fp}/{len(benign)} -> {out}")
