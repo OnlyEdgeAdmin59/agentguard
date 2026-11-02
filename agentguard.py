@@ -15,6 +15,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -160,18 +161,46 @@ def adjust(name: str, level: str, m: re.Match[str], text: str) -> str | None:
     return level
 
 
+# Letras cirílicas/griegas que se ven iguales a las latinas.
+CONFUSABLES = str.maketrans(
+    "аеорсухіјѕԁӏһԛԝ"
+    "АВЕКМНОРСТХІЈЅ"
+    "οιναΑΒΕΖΗΙΚΜΝΟΡΤΥΧ",
+    "aeopcyxijsdlhqw"
+    "ABEKMHOPCTXIJS"
+    "oivaABEZHIKMNOPTYX")
+RULE_HOMOGLYPH = "Letras de otro alfabeto que imitan latinas (homoglifos)"
+CONFUSABLE_CHARS = "".join(chr(c) for c in CONFUSABLES)
+HOMOGLYPH_WORD = re.compile(rf"\b(?=\w*[A-Za-z])(?=\w*[{CONFUSABLE_CHARS}])\w+\b")
+TAG_CHARS = re.compile(r"[\U000e0020-\U000e007e]+")
+BIDI_OVERRIDE = re.compile(r"‮([^‬\n]*)‬?")
+INVISIBLE = re.compile(r"[­​-‏‪-‮⁠-⁤﻿\U000e0000-\U000e007f]")
+
+
+def normalize(text: str) -> str:
+    """Lo que el modelo 'lee': texto escondido a la vista, sin invisibles, sin homoglifos ni ancho completo.
+    No cambia los saltos de línea, así los números de línea siguen sirviendo."""
+    text = TAG_CHARS.sub(lambda m: "".join(chr(ord(c) - 0xE0000) for c in m.group(0)), text)
+    text = BIDI_OVERRIDE.sub(lambda m: m.group(1)[::-1], text)
+    text = INVISIBLE.sub("", text)
+    return unicodedata.normalize("NFKC", text).translate(CONFUSABLES)
+
+
 def scan_text(text: str, source: str) -> list[Finding]:
     findings = []
-    for level, name, pattern in RULES:
-        for m in pattern.finditer(text):
+    clean = normalize(text)
+    for level, name, pattern in RULES + [("ALTO", RULE_HOMOGLYPH, HOMOGLYPH_WORD)]:
+        target = text if name in (RULE_INVISIBLE, RULE_HOMOGLYPH) else clean
+        for m in pattern.finditer(target):
+            final = adjust(name, level, m, target)
             final = adjust(name, level, m, text)
             if final is None:
                 continue
-            line = text.count("\n", 0, m.start()) + 1
+            line = target.count("\n", 0, m.start()) + 1
             snippet = m.group(0).replace("\n", " ")[:80]
-            ctx_start = text.rfind("\n", 0, m.start()) + 1
-            ctx_end = text.find("\n", m.end())
-            context = text[ctx_start:ctx_end if ctx_end != -1 else len(text)]  # todas las líneas del match
+            ctx_start = target.rfind("\n", 0, m.start()) + 1
+            ctx_end = target.find("\n", m.end())
+            context = target[ctx_start:ctx_end if ctx_end != -1 else len(target)]  # todas las líneas del match
             findings.append(Finding(final, name, source, line, snippet, context))
     return findings
 
