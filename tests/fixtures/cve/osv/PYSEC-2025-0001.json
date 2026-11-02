@@ -1,0 +1,9 @@
+{
+  "id": "PYSEC-2025-0001",
+  "summary": "Ejemplo sin CVE ni severidad etiquetada",
+  "aliases": [],
+  "affected": [{
+    "package": { "ecosystem": "PyPI", "name": "mcp_server_git" },
+    "ranges": [{ "type": "ECOSYSTEM", "events": [{ "introduced": "0" }, { "fixed": "0.6.3" }] }]
+  }]
+}

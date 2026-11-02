@@ -1,0 +1,5 @@
+{
+  "editor.fontSize": 14, /* comentario de bloque con "comillas" */
+  "url.example": "http://no-es-comentario.com//ruta",
+  "mcp": { "servers": { "memory": { "command": "npx", "args": ["@modelcontextprotocol/server-memory@0.6.0"] } } }
+}

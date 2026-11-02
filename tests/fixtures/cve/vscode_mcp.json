@@ -1,0 +1,7 @@
+{
+  // VS Code mcp.json usa "servers" y admite comentarios
+  "servers": {
+    "github": { "type": "http", "url": "https://api.githubcopilot.com/mcp/" },
+    "pipx-tool": { "command": "pipx", "args": ["run", "Some_Package[cli]==1.4.0"] },
+  },
+}

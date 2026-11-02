@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.1.14", "C:\\Users\\demo\\Documents"]
+    },
+    "remote-ok": { "command": "npx", "args": ["mcp-remote@0.1.15", "https://mcp.example.com/sse"] },
+    "git": { "command": "uvx", "args": ["mcp-server-git==0.6.2", "--repository", "/repo"] },
+    "fetch": { "command": "uvx", "args": ["mcp-server-fetch"] },
+    "win-wrapped": { "command": "cmd", "args": ["/c", "npx", "-y", "@playwright/mcp@0.0.29"] },
+    "docker": { "command": "docker", "args": ["run", "-i", "--rm", "mcp/github"] }
+  }
+}

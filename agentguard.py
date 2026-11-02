@@ -5,6 +5,7 @@ Uso:
                                                   (--all incluye node_modules, CHANGELOG, etc.)
   python agentguard.py lock   <carpeta>   guarda huellas en agentguard.lock.json
   python agentguard.py verify <carpeta>   alerta si algo cambió (rug pull)
+  python agentguard.py cve [carpeta]      CVE conocidos de los servidores MCP instalados (OSV.dev)
 Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI).
 """
 from __future__ import annotations
@@ -16,6 +17,9 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+# Submódulos (agentguard/cve/…) viven en la carpeta agentguard/ junto a este archivo.
+__path__ = [str(Path(__file__).resolve().parent / "agentguard")]
 
 # (nivel, nombre, patrón). Reglas simples; los filtros de contexto bajan falsas alarmas.
 RULE_OVERRIDE = "Anula instrucciones previas"
@@ -309,6 +313,9 @@ def main(argv: list[str]) -> int:
             stream.reconfigure(encoding="utf-8", errors="backslashreplace")
         except (AttributeError, ValueError):
             pass
+    if len(argv) >= 2 and argv[1] == "cve":
+        from agentguard.cve import cmd_cve  # import tardío: scan/lock/verify no lo necesitan
+        return cmd_cve(argv[2:])
     include_all = "--all" in argv
     argv = [a for a in argv if a != "--all"]
     if len(argv) == 2 and argv[1] not in COMMANDS:  # compatibilidad: scan por defecto

@@ -1,0 +1,1 @@
+{ "mcpServers": { "pkg-flag": { "command": "C:\\Program Files\\nodejs\\npx.cmd", "args": ["--yes", "--package", "@modelcontextprotocol/sdk@1.10.0", "mcp-demo"] } } }
