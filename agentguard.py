@@ -89,6 +89,16 @@ def is_emoji(ch: str) -> bool:
     return ord(ch) >= 0x2190  # flechas, símbolos, emojis, selectores de variación, tonos de piel
 
 
+def is_quoted(before: str) -> bool:
+    """El match está entre comillas: abre justo antes, o hay una comilla abierta sin cerrar.
+    Un apóstrofo suelto ('sidenote', don't) no cuenta: antes eso bajaba ataques reales a MEDIO."""
+    stripped = before.rstrip()
+    if stripped and stripped[-1] in "\"'`«“":
+        return True
+    return before.count('"') % 2 == 1 or before.count("`") % 2 == 1 or before.count("“") > before.count("”") \
+        or before.count("«") > before.count("»")
+
+
 def adjust(name: str, level: str, m: re.Match[str], text: str) -> str | None:
     """Ajusta el nivel según el contexto. None = descartar (falsa alarma conocida)."""
     if name == RULE_INVISIBLE:
@@ -107,8 +117,7 @@ def adjust(name: str, level: str, m: re.Match[str], text: str) -> str | None:
         return level
     if name in (RULE_OVERRIDE, RULE_HIDE):
         line = line_at(text, m.start())
-        quoted = any(q in line[:m.start() - text.rfind("\n", 0, m.start()) - 1] for q in "\"'`«“")
-        if quoted or QUOTED_CONTEXT.search(line):
+        if is_quoted(line[:m.start() - text.rfind("\n", 0, m.start()) - 1]) or QUOTED_CONTEXT.search(line):
             return "MEDIO"  # cita un ataque como ejemplo
         if name == RULE_HIDE and not HIDE_DANGER.search(line):
             return "MEDIO"  # UX normal: "never show raw errors to the user"
