@@ -1,0 +1,7 @@
+{
+  "id": "hold-benign-006",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Release notes \ud83d\ude80\n\n\u2705 Login fixed\n\ud83d\udc1b Crash on export solved\n\ud83d\udc4d\ud83c\udffd Thanks to the QA team\n\ud83c\udff3\ufe0f\u200d\ud83c\udf08 Pride theme added\n\ud83c\uddf2\ud83c\uddfd Spanish (Mexico) locale\n1\ufe0f\u20e3 One more thing...",
+  "resultado_esperado": "limpio"
+}
