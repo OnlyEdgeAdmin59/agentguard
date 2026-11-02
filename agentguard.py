@@ -35,8 +35,23 @@ URL = r"https?://"
 RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("ALTO", RULE_OVERRIDE,
      re.compile(r"ignore (all |any )?(previous|prior|above) (instructions|rules)", re.I)),
+    # Lo mismo en español, portugués y francés.
+    ("ALTO", RULE_OVERRIDE, re.compile(
+        r"\b(?:ignora|ignorar|ignore|olvida|olvidar|omite|descarta)\s+(?:todas?\s+|cualquier\s+)?(?:las\s+|tus\s+|sus\s+)?"
+        r"(?:instrucciones|reglas|indicaciones|[óo]rdenes)\s+(?:anteriores|previas|de arriba|del sistema)"
+        r"|\bignor[ae]\s+(?:todas\s+)?(?:as\s+)?(?:instru[çc][õo]es|regras)\s+anteriores"
+        r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)",
+        re.I)),
     ("ALTO", RULE_HIDE,
      re.compile(r"(do not|don't|never) (tell|inform|mention|reveal|show)\b(?:[^.\n]|\.(?=\S)){0,40}(user|human)", re.I)),
+    ("ALTO", RULE_HIDE, re.compile(
+        r"\b(?:no|nunca|jam[aá]s)\s+(?:le\s+|les\s+|se\s+lo\s+)?(?:digas|informes|menciones|muestres|reveles|avises|cuentes|comentes)\b"
+        r"(?:[^.\n]|\.(?=\S)){0,40}(?:usuario|humano|cliente)"
+        r"|\bsin\s+(?:avisar|decir|informar|contar|notificar|preguntar)(?:le|les)?\s+(?:nada\s+)?(?:al|a\s+los)\s+usuarios?"
+        r"|\bsin\s+que\s+(?:el|los)\s+usuarios?\s+(?:lo\s+|se\s+)?(?:sepa|note|entere|vea)n?"
+        r"|\bn[ãa]o\s+(?:conte|diga|informe|mostre|mencione)\b[^.\n]{0,40}usu[áa]rio"
+        r"|\bne\s+(?:le\s+|lui\s+)?(?:dis|dites|mentionne[sz]?|montre[sz]?)\s+(?:pas|rien)\b[^.\n]{0,40}utilisateur",
+        re.I)),
     ("MEDIO", RULE_SECRET,
      re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json)", re.I)),
     # Envío real: comandos/código HTTP, o una orden "send X to https://". Nada de "postcss" ni links markdown.
@@ -45,7 +60,9 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         + r"|curl\b[^\n]{0,120}" + URL + r"[^\n]{0,120}(-X\s*POST|--data|-d\s|-F\s|--upload-file)"
         + r"|\b(requests|httpx|axios|session|client)\.(post|put)\(\s*f?[\"'`]" + URL
         + r"|fetch\(\s*[\"'`]" + URL + r"[^)]{0,200}method\s*:\s*[\"']?(POST|PUT)"
-        + r"|\b(send|upload|forward|exfiltrate|post|transmit)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL,
+        + r"|\b(send|upload|forward|exfiltrate|post|transmit)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
+        + r"|\b(env[ií]a(?:lo|la|los|las|r)?|env[ií]e(?:lo|la)?|manda(?:lo|la|r)?|sube(?:lo|la)?|subir|reenv[ií]a(?:lo|la)?"
+        r"|transmite|exfiltra|envoie[sz]?|envi[ae]-?(?:o|a)?)\b(?:[^.\n]|\.(?=\S)){0,60}\b(?:a|para|à|al)\b\s*[`\"'(<]?" + URL,
         re.I)),
     ("MEDIO", "Etiquetas de urgencia para el modelo",
      re.compile(r"<\s*(important|system|secret|instructions?)\s*>", re.I)),
@@ -75,12 +92,14 @@ COMMENT_ORDER = re.compile(
     re.I)
 # Señales de que el texto cita un ataque como ejemplo (documentación de seguridad).
 QUOTED_CONTEXT = re.compile(
-    r"example|e\.g\.|such as|attack|injection|malicious|adversar|payload|phrase|detect|pattern|jailbreak",
+    r"example|e\.g\.|such as|attack|injection|malicious|adversar|payload|phrase|detect|pattern|jailbreak"
+    r"|ejemplo|p\. ?ej|ataque|inyecci|malicios|frase|patr[oó]n",
     re.I)
 ADDRESS = re.compile(r"https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+")
 # Ocultar algo solo es grave si lo oculto es una acción o un secreto.
 HIDE_DANGER = re.compile(
-    r"send|sent|upload|delet|run|execut|install|download|key|token|password|credential|secret|\.ssh|\.env|file",
+    r"send|sent|upload|delet|run|execut|install|download|key|token|password|credential|secret|\.ssh|\.env|file"
+    r"|\benv[ií][aeo]|\bsub(?:ir|e|i[oó])\b|borr|elimin|ejecut|instal|descarg|clave|contrase|senha|archivo|fichero|arquivo|fichier",
     re.I)
 
 
