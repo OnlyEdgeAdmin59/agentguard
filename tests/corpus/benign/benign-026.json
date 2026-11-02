@@ -1,0 +1,7 @@
+{
+  "id": "benign-026",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Local dev\n\n```bash\ncurl -X POST http://localhost:8080/api/reindex -H 'X-API-Key: $LOCAL_KEY'\n```",
+  "resultado_esperado": "limpio"
+}

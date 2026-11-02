@@ -1,0 +1,7 @@
+{
+  "id": "benign-013",
+  "tipo": "herramienta_mcp",
+  "formato": "mcp",
+  "texto": "Translates text between languages. Supported: en, es, fr, de, pt, it. Formal register by default.",
+  "resultado_esperado": "limpio"
+}

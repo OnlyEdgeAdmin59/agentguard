@@ -1,0 +1,7 @@
+{
+  "id": "benign-024",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Team bios\n\nBuilt with \u2764\ufe0f by the platform team \ud83d\udc68\u200d\ud83d\udcbb\ud83d\udc69\u200d\ud83d\udd2c.",
+  "resultado_esperado": "limpio"
+}
