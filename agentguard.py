@@ -29,6 +29,7 @@ RULE_SEND = "Envío de datos a URL externa"
 RULE_COMMENT = "Instrucción oculta en comentario HTML"
 RULE_B64 = "Bloque base64 largo"
 RULE_INVISIBLE = "Caracteres invisibles (texto escondido)"
+RULE_SHADOW = "Cambia cómo se usan otras herramientas (tool shadowing)"
 
 URL = r"https?://"
 RULES: list[tuple[str, str, re.Pattern[str]]] = [
@@ -52,6 +53,19 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("MEDIO", RULE_B64, re.compile(r"[A-Za-z0-9+/]{120,}={0,2}")),
     ("ALTO", RULE_INVISIBLE,
      re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff\U000e0000-\U000e007f]")),
+    # Tool shadowing: la descripci\u00f3n de una tool cambia c\u00f3mo el agente usa OTRAS tools.
+    ("ALTO", RULE_SHADOW, re.compile(
+        r"\b(?:when(?:ever)?|each time|every time|any time)\b[^.\n]{0,50}?\b(?!(?:this|the|a|that|same|it)\b)"
+        r"[`'\"]?[\w-]+[`'\"]?\s+tool\b[^.\n]{0,25}?\b(?:is (?:used|called|invoked|run)|returns|runs|you (?:call|use|invoke|run))"
+        r"|\bregardless of (?:what|whatever) the user (?:said|says|asked|asks|wants|requested|typed)"
+        r"|\b(?:first|also|always)\s+(?:call|use|invoke)\s+this tool\b[^.\n]{0,40}\bwith\b[^.\n]{0,30}"
+        r"\b(?:history|conversation|messages|contents|output|credentials|files?)\b"
+        r"|\b(?:pass|send|forward|copy|include|append)\s+(?:those |these |the |its |their |all )?"
+        r"(?:contents?|outputs?|results?|history|messages|responses?)\b[^.\n]{0,30}\bto this tool"
+        r"|\b(?:do not|don't|never)\s+use\s+the\s+(?:official\s+|built-in\s+|original\s+|other\s+)?[`'\"]?[\w-]+[`'\"]?\s+"
+        r"(?:tool|server|integration)\b[^.\n]{0,80}\b(?:deprecated|broken|has a bug|use this tool)"
+        r"|\b(?:always|also|silently|secretly)\s+(?:add|include|cc|bcc|copy)\b[^.\n]{0,40}[\w.+-]+@[\w-]+\.[a-z]{2,}",
+        re.I)),
 ]
 
 # Comentario HTML que le habla al modelo (lo demás son comentarios normales y se ignoran).
@@ -63,6 +77,7 @@ COMMENT_ORDER = re.compile(
 QUOTED_CONTEXT = re.compile(
     r"example|e\.g\.|such as|attack|injection|malicious|adversar|payload|phrase|detect|pattern|jailbreak",
     re.I)
+ADDRESS = re.compile(r"https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+")
 # Ocultar algo solo es grave si lo oculto es una acción o un secreto.
 HIDE_DANGER = re.compile(
     r"send|sent|upload|delet|run|execut|install|download|key|token|password|credential|secret|\.ssh|\.env|file",
@@ -115,9 +130,10 @@ def adjust(name: str, level: str, m: re.Match[str], text: str) -> str | None:
         if "://" in text[token_start:m.start()]:
             return None  # parte de una URL (playgrounds, badges)
         return level
-    if name in (RULE_OVERRIDE, RULE_HIDE):
+    if name in (RULE_OVERRIDE, RULE_HIDE, RULE_SHADOW):
         line = line_at(text, m.start())
-        if is_quoted(line[:m.start() - text.rfind("\n", 0, m.start()) - 1]) or QUOTED_CONTEXT.search(line):
+        prose = ADDRESS.sub(" ", line)  # "attacker@evil.io" o una URL no son documentación de seguridad
+        if is_quoted(line[:m.start() - text.rfind("\n", 0, m.start()) - 1]) or QUOTED_CONTEXT.search(prose):
             return "MEDIO"  # cita un ataque como ejemplo
         if name == RULE_HIDE and not HIDE_DANGER.search(line):
             return "MEDIO"  # UX normal: "never show raw errors to the user"
