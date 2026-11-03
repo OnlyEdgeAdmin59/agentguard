@@ -24,10 +24,10 @@ Homepage = "https://github.com/OnlyEdgeAdmin59/agentguard"
 Issues = "https://github.com/OnlyEdgeAdmin59/agentguard/issues"
 
 [project.scripts]
-agentguard = "agentguard:run"
+agentguard = "agentguard.cli:run"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["agentguard.py", "agentguard"]
+only-include = ["agentguard"]
 
 [tool.hatch.build.targets.sdist]
 only-include = ["agentguard.py", "agentguard", "README.md", "LICENSE", "SECURITY.md", "pyproject.toml"]
