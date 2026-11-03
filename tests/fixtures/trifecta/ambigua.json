@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "archivos": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.1.14", "/home/demo"] },
+    "buscador": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-brave-search"] },
+    "interno": { "command": "python", "args": ["server.py"] }
+  }
+}

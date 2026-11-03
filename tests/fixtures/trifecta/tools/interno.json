@@ -1,0 +1,6 @@
+{
+  "tools": [
+    { "name": "post_message", "description": "Posts a message to a team chat channel." },
+    { "name": "list_notes", "description": "Lists the titles of saved notes." }
+  ]
+}

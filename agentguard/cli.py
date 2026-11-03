@@ -6,6 +6,8 @@ Uso:
   agentguard lock   <carpeta>   guarda huellas en agentguard.lock.json
   agentguard verify <carpeta>   alerta si algo cambió (rug pull)
   agentguard cve [carpeta]      CVE conocidos de los servidores MCP instalados (OSV.dev)
+  agentguard trifecta [carpeta] [--tools dir]
+                                tríada letal: datos privados + contenido no confiable + salida
 Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI).
 """
 from __future__ import annotations
@@ -83,6 +85,9 @@ def main(argv: list[str]) -> int:
     if len(argv) >= 2 and argv[1] == "cve":
         from .cve import cmd_cve  # import tardío: scan/lock/verify no lo necesitan
         return cmd_cve(argv[2:])
+    if len(argv) >= 2 and argv[1] == "trifecta":
+        from .trifecta import cmd_trifecta
+        return cmd_trifecta(argv[2:])
     include_all = "--all" in argv
     argv = [a for a in argv if a != "--all"]
     if len(argv) == 2 and argv[1] not in COMMANDS:  # compatibilidad: scan por defecto
