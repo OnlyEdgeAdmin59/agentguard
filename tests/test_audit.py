@@ -39,6 +39,10 @@ class Construccion(unittest.TestCase):
         self.assertTrue(any(i.severidad == "Alto" for i in scan))
         self.assertTrue(all(i.arreglo for i in scan))
         self.assertTrue(all("malicioso_tools.json" in i.donde for i in scan if i.severidad == "Alto"))
+        medios = [i.titulo for i in scan if i.severidad == "Medio"]
+        self.assertEqual(len(medios), len(set(medios)))  # un item por regla MEDIO
+        secrets = next(i for i in scan if i.titulo == "Menciona secretos")
+        self.assertEqual((secrets.donde, secrets.detalle[:7]), ("varios", "2 veces"))
 
     def test_cve_critico_con_arreglo(self):
         crit = [i for i in self.by_origin("cve") if i.severidad == "Crítico"]
