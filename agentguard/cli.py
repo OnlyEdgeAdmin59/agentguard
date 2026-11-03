@@ -82,6 +82,10 @@ def main(argv: list[str]) -> int:
             stream.reconfigure(encoding="utf-8", errors="backslashreplace")
         except (AttributeError, ValueError):
             pass
+    if argv[1:] == ["--version"]:
+        from . import __version__
+        print(f"agentguard {__version__}")
+        return 0
     if len(argv) >= 2 and argv[1] == "cve":
         from .cve import cmd_cve  # import tardío: scan/lock/verify no lo necesitan
         return cmd_cve(argv[2:])
