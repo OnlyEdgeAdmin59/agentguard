@@ -1,5 +1,19 @@
 # Resumen: rama `feat/fase0-fase1` (actualizado 2026-11-02, tercer loop)
 
+## Detector de tríada letal: `agentguard trifecta` (2026-11-02)
+- Usa el mismo inventario de configs MCP que `cve` (Claude Desktop, Claude Code, Cursor, VS Code). Agrupa por cliente, porque los servidores de un mismo cliente se cargan juntos.
+- Cada servidor se clasifica en tres capacidades: **lee datos privados**, **trae contenido no confiable**, **envía hacia afuera**.
+  1. Primero la **tabla curada** `agentguard/trifecta/known.json`: 20 servidores conocidos, por paquete npm/PyPI, imagen Docker o URL remota.
+  2. Si no está en la tabla, **heurística** por nombre, comando, variables de entorno y, con `--tools <carpeta>`, nombres y descripciones de sus tools.
+  - Cada capacidad dice de dónde salió (`tabla` o `heurística`). Lo heurístico se marca "confirmar a mano".
+- **Resultados posibles:**
+  - **[ALTO] TRÍADA LETAL** (código 1): dice qué servidor aporta cada capacidad y qué quitar para romperla, con las opciones que tocan menos servidores. Avisa si un solo servidor junta las tres (por ejemplo GitHub MCP).
+  - **[MEDIO] POSIBLE TRÍADA**: hay dos capacidades y un servidor sin clasificar podría aportar la tercera.
+  - **Sin tríada.**
+- Tests: 18 nuevos con configs de ejemplo (con tríada, sin tríada, ambigua, ambigua resuelta con `--tools`, un solo servidor). **Suite completa: 44 tests OK** (2 de red saltados). El wheel incluye `known.json`.
+- En esta máquina: 1 servidor en Claude Code, sin tríada.
+- Límites: no ejecuta los servidores (sus tools solo se ven con `--tools`). `~/.claude.json` junta los servidores de todos los proyectos en un grupo. La heurística por palabras puede equivocarse en los dos sentidos.
+
 ## Holdout v2 con benchmark público (2026-11-02)
 - Fuente: `deepset/prompt-injections` (Hugging Face, Apache 2.0, revisión fijada), elegido por Charlie. Importado con `scripts/importar_deepset.py` en `tests/corpus_holdout_v2/`: **263 inyecciones y 399 textos normales**. Unas 73 inyecciones están en alemán.
 - **Antes del rediseño: detecta 5/263 (2%), falsos positivos 2/399, 0 benignos con MEDIO** (`reports/holdout_v2_antes.md`).
