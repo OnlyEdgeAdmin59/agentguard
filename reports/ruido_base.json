@@ -1,0 +1,16 @@
+{
+  "archivos": 2984,
+  "ALTO": 1,
+  "MEDIO": 1618,
+  "por_regla": {
+    "ALTO: Instrucción oculta en comentario HTML": 1,
+    "MEDIO: Anula instrucciones previas": 20,
+    "MEDIO: Archivo demasiado grande, no revisado": 1,
+    "MEDIO: Envío de datos a URL externa": 20,
+    "MEDIO: Etiquetas de urgencia para el modelo": 43,
+    "MEDIO: Menciona secretos": 1455,
+    "MEDIO: Mete datos en un parámetro de la tool": 15,
+    "MEDIO: Pide hacer algo a escondidas": 24,
+    "MEDIO: Pide ocultar algo al usuario": 40
+  }
+}
