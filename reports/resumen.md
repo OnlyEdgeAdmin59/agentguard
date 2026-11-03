@@ -1,5 +1,33 @@
 # Resumen: rama `feat/fase0-fase1` (actualizado 2026-11-02, tercer loop)
 
+## 0.2.0 preparada, sin publicar (2026-11-02)
+- **Trifecta por proyecto:** ya no se mezclan todos los proyectos de Claude Code. Cada proyecto se revisa con los servidores globales más los suyos (incluido el `.mcp.json` de la carpeta revisada), y el reporte dice en qué proyecto aparece cada tríada.
+  - Test: dos proyectos que mezclados darían tríada, pero por separado no la tienen.
+- **Versión 0.2.0** en un solo lugar (`agentguard/__init__.py`; pyproject la lee de ahí). Nuevo `agentguard --version`.
+  - `CHANGELOG.md` incluye las tasas reales: holdout ciego 10/23, deepset 5/263, y dice "no detecta todo".
+  - README con pip, uvx y ejemplos de cve, trifecta y audit.
+  - La Action del README sigue en `@v0.1.5` hasta que exista el tag v0.2.0.
+- **Wheel probado en un venv limpio**, fuera del repo, con `agentguard_scan-0.2.0-py3-none-any.whl`:
+
+  | comando | resultado | código |
+  |---|---|---|
+  | `--version` | `agentguard 0.2.0` | 0 |
+  | `scan ejemplos` | 2 archivos, 6 hallazgos, 2 ALTO | 1 |
+  | `cve` (config de fixture, OSV real) | 6 servidores, 4 consultados, 12 vulnerabilidades (incluye CVE-2025-6514 en mcp-remote 0.1.15) | 1 |
+  | `trifecta` (fixture con 3 proyectos) | tríada solo en `proyecto /home/demo/c` | 1 |
+  | `audit --sin-red` | reporte con 3 hallazgos, riesgo Alto | 1 |
+
+- **`agentguard audit`:** reporte en Markdown con resumen ejecutivo, hallazgos por severidad (Crítico → Info), cómo arreglar cada uno, una sección "Revisión manual" vacía y los límites del análisis.
+  - Los avisos MEDIO se agrupan por regla para que el reporte se pueda leer.
+  - Sale con código 1 si hay hallazgos Críticos o Altos.
+  - Ejemplo con fixtures en `reports/auditoria_ejemplo.md`, generado sin red con `scripts/auditoria_ejemplo.py`.
+- **Audit sobre tu config local y tus skills** (reporte solo en una carpeta temporal, no en el repo):
+  - 768 archivos, 0 ALTO.
+  - 661 avisos MEDIO en 7 reglas; 593 son "Menciona secretos", o sea ruido.
+  - 1 servidor MCP con la versión sin fijar, sin tríada, 0 CVE.
+  - Riesgo Medio.
+- Suite: **58 tests OK** (2 de red saltados).
+
 ## Detector de tríada letal: `agentguard trifecta` (2026-11-02)
 - Usa el mismo inventario de configs MCP que `cve` (Claude Desktop, Claude Code, Cursor, VS Code). Agrupa por cliente, porque los servidores de un mismo cliente se cargan juntos.
 - Cada servidor se clasifica en tres capacidades: **lee datos privados**, **trae contenido no confiable**, **envía hacia afuera**.
