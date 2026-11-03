@@ -1,0 +1,14 @@
+{
+  "numStartups": 12,
+  "mcpServers": {
+    "context7": { "type": "stdio", "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"] }
+  },
+  "projects": {
+    "/home/demo/app": {
+      "mcpServers": {
+        "sentry": { "type": "http", "url": "https://mcp.sentry.dev/mcp" },
+        "time": { "command": "uv", "args": ["tool", "run", "--from", "mcp-server-time==0.6.2", "mcp-server-time"] }
+      }
+    }
+  }
+}

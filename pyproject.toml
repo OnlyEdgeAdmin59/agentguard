@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentguard-scan"
-version = "0.1.5"
+dynamic = ["version"]
 description = "Detecta tool poisoning y rug pulls en skills (SKILL.md) y conectores MCP de agentes de IA"
 readme = "README.md"
 license = "Apache-2.0"
@@ -24,10 +24,13 @@ Homepage = "https://github.com/OnlyEdgeAdmin59/agentguard"
 Issues = "https://github.com/OnlyEdgeAdmin59/agentguard/issues"
 
 [project.scripts]
-agentguard = "agentguard:run"
+agentguard = "agentguard.cli:run"
+
+[tool.hatch.version]
+path = "agentguard/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-only-include = ["agentguard.py"]
+only-include = ["agentguard"]
 
 [tool.hatch.build.targets.sdist]
-only-include = ["agentguard.py", "README.md", "LICENSE", "SECURITY.md", "pyproject.toml"]
+only-include = ["agentguard.py", "agentguard", "README.md", "LICENSE", "SECURITY.md", "pyproject.toml"]

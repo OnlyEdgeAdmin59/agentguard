@@ -1,0 +1,7 @@
+{
+  "id": "hold-benign-013",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Stripe webhooks\n\n```bash\nstripe listen --forward-to localhost:3000/api/webhooks\n```\n\nVerify the `Stripe-Signature` header with `STRIPE_WEBHOOK_SECRET` before processing any event, and return 200 quickly.",
+  "resultado_esperado": "limpio"
+}

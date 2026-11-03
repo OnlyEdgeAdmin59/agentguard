@@ -1,0 +1,7 @@
+{
+  "id": "benign-025",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Error handling\n\nNever show raw stack traces to the user; log them and show a friendly message instead.",
+  "resultado_esperado": "limpio"
+}

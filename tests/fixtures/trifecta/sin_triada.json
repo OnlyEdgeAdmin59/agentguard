@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "archivos": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.1.14", "/home/demo"] },
+    "git": { "command": "uvx", "args": ["mcp-server-git==0.6.2", "--repository", "/repo"] },
+    "pensar": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"] }
+  }
+}

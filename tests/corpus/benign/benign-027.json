@@ -1,0 +1,7 @@
+{
+  "id": "benign-027",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Image generation\n\n```python\nrequests.post('https://fal.run/fal-ai/flux', headers={'Authorization': f'Key {os.environ[\"FAL_KEY\"]}'})\n```",
+  "resultado_esperado": "limpio"
+}

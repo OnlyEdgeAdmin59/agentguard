@@ -1,0 +1,7 @@
+{
+  "id": "hold-benign-015",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# Publish docs\n\n```bash\nnpm run build\naws s3 sync ./site s3://docs-bucket --delete\n```\n\nAuthenticate first with `aws sso login --profile docs`.",
+  "resultado_esperado": "limpio"
+}

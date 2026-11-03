@@ -1,0 +1,7 @@
+{
+  "id": "benign-023",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "<!-- Generated from template; do not edit by hand -->\n# Changelog helper\n\nSummarize commits since the last tag into release notes.",
+  "resultado_esperado": "limpio"
+}

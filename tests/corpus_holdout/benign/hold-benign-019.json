@@ -1,0 +1,7 @@
+{
+  "id": "hold-benign-019",
+  "tipo": "skill",
+  "formato": "skill",
+  "texto": "# \u00dcbersetzung\n\n\u00dcbersetzt Texte ins Deutsche. Achte auf die H\u00f6flichkeitsform (Sie) und auf \u00e4, \u00f6, \u00fc und \u00df.",
+  "resultado_esperado": "limpio"
+}
