@@ -2,7 +2,9 @@
 Correr: python -m unittest discover tests
 """
 import io
+import json
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -10,7 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import agentguard  # noqa: E402
-from agentguard.trifecta import KNOWN, analyze, classify, cmd_trifecta, load_known, servers_of  # noqa: E402
+from agentguard.trifecta import (KNOWN, analyze, classify, cmd_trifecta, groups, load_known,  # noqa: E402
+                                 scopes_of, servers_of)
 
 FIX = ROOT / "tests" / "fixtures" / "trifecta"
 PRIV, UNTRUSTED, OUT = "privado", "no_confiable", "salida"
@@ -105,6 +108,47 @@ class Analisis(unittest.TestCase):
         self.assertEqual(result.estado, "triada")
         self.assertEqual(result.solo, ["github"])
         self.assertEqual(result.quitar, [["github"]])
+
+
+class PorProyecto(unittest.TestCase):
+    """Claude Code: cada proyecto hereda los servidores globales, pero no ve los de otros proyectos."""
+
+    def test_juntos_hay_triada_por_separado_no(self):
+        path = FIX / "claude_dos_proyectos.json"
+        self.assertEqual(analyze(servers_of(path)).estado, "triada")  # mezclar todo inventa una tríada
+        scopes = scopes_of(path)
+        self.assertEqual(list(scopes), ["global", "proyecto /home/demo/a", "proyecto /home/demo/b"])
+        for label, group in scopes.items():
+            self.assertNotEqual(analyze(group).estado, "triada", label)
+        self.assertEqual(sorted(s.name for s in scopes["proyecto /home/demo/a"]), ["archivos", "buscador"])
+
+    def test_reporte_dice_el_proyecto(self):
+        code, out = run([str(FIX / "claude_dos_proyectos.json")])
+        self.assertEqual(code, 0)
+        self.assertNotIn("TRÍADA LETAL", out)
+        code, out = run([str(FIX / "claude_proyecto_con_triada.json")])
+        self.assertEqual(code, 1)
+        self.assertEqual(out.count("TRÍADA LETAL"), 1)
+        block = out.split("== ")[[i for i, b in enumerate(out.split("== ")) if "TRÍADA LETAL" in b][0]]
+        self.assertTrue(block.startswith("archivo · proyecto /home/demo/c"), block[:60])
+
+    def test_inventario_hereda_global_y_suma_mcp_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home, project = Path(tmp) / "home", Path(tmp) / "proyecto"
+            home.mkdir()
+            project.mkdir()
+            data = json.loads((FIX / "claude_dos_proyectos.json").read_text(encoding="utf-8"))
+            data["projects"] = {str(project): data["projects"]["/home/demo/a"], "/otro": data["projects"]["/home/demo/b"]}
+            (home / ".claude.json").write_text(json.dumps(data), encoding="utf-8")
+            avisos = {"mcpServers": {"avisos2": {"command": "python", "args": ["webhook_notifier.py"]}}}
+            (project / ".mcp.json").write_text(json.dumps(avisos), encoding="utf-8")
+            found = groups(project, system="linux", home=home, env={})
+        self.assertEqual(list(found), ["Claude Code · global", "Claude Code · proyecto /otro",
+                                       f"Claude Code · proyecto {project}"])
+        self.assertEqual(analyze(found["Claude Code · proyecto /otro"]).estado, "sin_triada")
+        target = found[f"Claude Code · proyecto {project}"]
+        self.assertEqual(sorted(s.name for s in target), ["archivos", "avisos2", "buscador"])
+        self.assertEqual(analyze(target).estado, "triada")
 
 
 class Comando(unittest.TestCase):

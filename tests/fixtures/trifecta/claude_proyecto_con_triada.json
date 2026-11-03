@@ -1,0 +1,48 @@
+{
+  "mcpServers": {
+    "archivos": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2025.1.14",
+        "/home/demo"
+      ]
+    }
+  },
+  "projects": {
+    "/home/demo/a": {
+      "mcpServers": {
+        "buscador": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-brave-search"
+          ]
+        }
+      }
+    },
+    "/home/demo/b": {
+      "mcpServers": {
+        "avisos": {
+          "command": "python",
+          "args": [
+            "webhook_notifier.py"
+          ]
+        }
+      }
+    },
+    "/home/demo/vacio": {
+      "mcpServers": {}
+    },
+    "/home/demo/c": {
+      "mcpServers": {
+        "web": {
+          "command": "uvx",
+          "args": [
+            "mcp-server-fetch"
+          ]
+        }
+      }
+    }
+  }
+}

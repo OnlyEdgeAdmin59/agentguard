@@ -157,11 +157,34 @@ def tools_for(name: str, tools_dir: Path | None) -> list[dict]:
     return tools if isinstance(tools, list) else []
 
 
-def read_servers(path: Path) -> dict[str, dict]:
+def read_data(path: Path) -> object:
     try:
-        return servers_in(json.loads(strip_jsonc(path.read_text(encoding="utf-8", errors="replace"))))
+        return json.loads(strip_jsonc(path.read_text(encoding="utf-8", errors="replace")))
     except (OSError, json.JSONDecodeError):
-        return {}
+        return None
+
+
+def read_servers(path: Path) -> dict[str, dict]:
+    """Todos los servidores del archivo mezclados (incluye los de todos los proyectos)."""
+    return servers_in(read_data(path))
+
+
+def split_scopes(data: object) -> tuple[dict[str, dict], dict[str, dict[str, dict]]]:
+    """Servidores globales y los de cada proyecto (~/.claude.json: "projects": {ruta: {"mcpServers": ...}})."""
+    if not isinstance(data, dict):
+        return {}, {}
+    top = servers_in({k: v for k, v in data.items() if k != "projects"})
+    raw = data.get("projects") if isinstance(data.get("projects"), dict) else {}
+    projects = {}
+    for where, proj in raw.items():
+        if isinstance(proj, dict):
+            projects[where] = servers_in({"mcpServers": proj.get("mcpServers")})
+    return top, projects
+
+
+def same_path(a: str | Path, b: str | Path) -> bool:
+    norm = lambda p: os.path.normcase(os.path.normpath(os.path.abspath(str(p))))  # noqa: E731
+    return norm(a) == norm(b)
 
 
 def classify_all(client: str, servers: dict[str, dict], tools_dir: Path | None) -> list[Classified]:
@@ -177,13 +200,52 @@ def servers_of(path: Path, tools_dir: Path | None = None, client: str = "archivo
     return classify_all(client, read_servers(path), tools_dir)
 
 
-def groups(project: Path, tools_dir: Path | None = None) -> dict[str, list[Classified]]:
-    """Servidores agrupados por cliente: los de un mismo cliente se cargan juntos."""
-    merged: dict[str, dict[str, dict]] = {}
-    for client, path in config_paths(sys.platform, Path.home(), os.environ, project):
-        if path.is_file():
-            merged.setdefault(client, {}).update(read_servers(path))
-    return {c: classify_all(c, s, tools_dir) for c, s in merged.items() if s}
+def scoped(top: dict[str, dict], projects: dict[str, dict[str, dict]]) -> dict[str, dict[str, dict]]:
+    """Cada proyecto hereda los globales; un proyecto sin servidores propios no se repite."""
+    out = {"global": top} if top else {}
+    out.update({f"proyecto {where}": {**top, **own} for where, own in projects.items() if own})
+    return out
+
+
+def scopes_of(path: Path, tools_dir: Path | None = None, client: str = "archivo") -> dict[str, list[Classified]]:
+    """Servidores de un archivo de config agrupados por alcance real: global y cada proyecto."""
+    return {label: classify_all(client, servers, tools_dir)
+            for label, servers in scoped(*split_scopes(read_data(path))).items()}
+
+
+def groups(project: Path, tools_dir: Path | None = None, system: str | None = None, home: Path | None = None,
+           env=None) -> dict[str, list[Classified]]:
+    """Por cliente y alcance: global, cada proyecto de ~/.claude.json y la carpeta revisada
+    (sus .mcp.json / .cursor / .vscode). Cada proyecto hereda los servidores globales de su cliente."""
+    system, home = system or sys.platform, home or Path.home()
+    env = os.environ if env is None else env
+    global_paths = config_paths(system, home, env, None)
+    project_paths = [p for p in config_paths(system, home, env, project) if p not in global_paths]
+    tops: dict[str, dict] = {}
+    projects: dict[str, dict[str, dict]] = {}
+    seen: set[Path] = set()
+    for client, path in global_paths + project_paths:
+        if not path.is_file() or path.resolve() in seen:
+            continue
+        seen.add(path.resolve())
+        top, own = split_scopes(read_data(path))
+        tops.setdefault(client, {})
+        projects.setdefault(client, {})
+        if (client, path) in project_paths:
+            projects[client].setdefault(str(project), {}).update(top)
+            continue
+        tops[client].update(top)
+        for where, servers in own.items():
+            key = str(project) if same_path(where, project) else where
+            projects[client].setdefault(key, {}).update(servers)
+    out = {}
+    for client in tops:
+        target = projects[client].pop(str(project), None)  # la carpeta revisada va al final
+        if target is not None:
+            projects[client][str(project)] = target
+        for label, servers in scoped(tops[client], projects[client]).items():
+            out[f"{client} · {label}"] = classify_all(client, servers, tools_dir)
+    return out
 
 
 def analyze(group: list[Classified]) -> Result:
@@ -246,7 +308,10 @@ def cmd_trifecta(args: list[str]) -> int:
         tools_dir = Path(args[i + 1]) if i + 1 < len(args) else None
         args = args[:i] + args[i + 2:]
     target = Path(args[0]) if args else Path.cwd()
-    found = {"archivo": servers_of(target, tools_dir)} if target.is_file() else groups(target, tools_dir)
+    if target.is_file():
+        found = {f"archivo · {label}": g for label, g in scopes_of(target, tools_dir).items()}
+    else:
+        found = groups(target, tools_dir)
     if not any(found.values()):
         print("No se encontraron servidores MCP en las configuraciones conocidas.")
         return 0
