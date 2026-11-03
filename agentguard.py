@@ -10,6 +10,8 @@ Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI).
 """
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
 import json
 import os
@@ -31,6 +33,9 @@ RULE_COMMENT = "Instrucción oculta en comentario HTML"
 RULE_B64 = "Bloque base64 largo"
 RULE_INVISIBLE = "Caracteres invisibles (texto escondido)"
 RULE_SHADOW = "Cambia cómo se usan otras herramientas (tool shadowing)"
+RULE_STEALTH = "Pide hacer algo a escondidas"
+RULE_PARAM = "Mete datos en un parámetro de la tool"
+RULE_B64_HIDDEN = "Instrucción escondida en base64"
 
 URL = r"https?://"
 RULES: list[tuple[str, str, re.Pattern[str]]] = [
@@ -42,6 +47,18 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"(?:instrucciones|reglas|indicaciones|[óo]rdenes)\s+(?:anteriores|previas|de arriba|del sistema)"
         r"|\bignor[ae]\s+(?:todas\s+)?(?:as\s+)?(?:instru[çc][õo]es|regras)\s+anteriores"
         r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)",
+        re.I)),
+    # Reformulaciones: otras palabras para anular reglas o cambiarle el papel al modelo.
+    ("ALTO", RULE_OVERRIDE, re.compile(
+        r"\b(?:disregard|forget|bypass|set aside|discard)\s+(?:all\s+|any\s+)?(?:of\s+)?(?:your|the|previous|prior|earlier"
+        r"|above|system|safety|existing)\s+(?:[\w-]+\s+){0,2}?(?:instructions?|rules|guidelines|guardrails|polic(?:y|ies)"
+        r"|prompt|restrictions|directives)\b"
+        r"|\byou are now (?:in |a |an )?[^.\n]{0,25}\b(?:mode|unrestricted|jailbroken|unfiltered)\b"
+        r"|\b(?:note|message) (?:to|for) the (?:ai|assistant|model|llm|agent)(?: model)?\s*:"  # "instructions for the AI" = docs
+        r"|\b(?:salta(?:te|r)?|evita|desobedece|desactiva)\s+(?:todas?\s+)?(?:las\s+|tus\s+)?(?:reglas|restricciones"
+        r"|instrucciones|pol[ií]ticas)\b(?:\s+de seguridad)?"
+        r"|\b(?:ahora|a partir de ahora)\s+est[áa]s\s+en\s+modo\b"
+        r"|\bnota\s+(?:para|al)\s+(?:el\s+|la\s+)?(?:asistente|modelo|agente|ia)\b",
         re.I)),
     ("ALTO", RULE_HIDE,
      re.compile(r"(do not|don't|never) (tell|inform|mention|reveal|show)\b(?:[^.\n]|\.(?=\S)){0,40}(user|human)", re.I)),
@@ -55,6 +72,28 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         re.I)),
     ("MEDIO", RULE_SECRET,
      re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json)", re.I)),
+    # PISTA = no se muestra sola; solo cuenta para escalar con un envío o un parámetro (si no, duplica el ruido).
+    ("PISTA", RULE_SECRET,  # AWS_SECRET_KEY, GITHUB_TOKEN…, "all environment variables"
+     re.compile(r"\b[A-Z][A-Z0-9]*_(?:SECRET(?:_ACCESS)?_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY)\b"
+                r"|(?i:(?:all )?environment variables|env vars|variables de entorno)")),
+    # Orden de hacer algo a escondidas ("silently append…"); "X silently fails" es descriptivo y no cuenta.
+    # Grave solo si lo escondido es un envío o un secreto (STEALTH_DANGER).
+    ("ALTO", RULE_STEALTH, re.compile(
+        r"\b(?:silently|secretly|quietly|covertly|discreetly)\s+(?:send|upload|forward|append|include|copy|attach|post"
+        r"|call|add|read|collect|exfiltrate|share|transmit)\b"
+        r"|\bwithout (?:telling|informing|notifying|alerting) (?:the )?user\b"
+        r"|\b(?:env[ií]a|sube|reenv[ií]a|copia|agrega|lee|manda)\w*\s+(?:en secreto|silenciosamente|discretamente"
+        r"|a escondidas)\b|\b(?:en secreto|silenciosamente|discretamente|a escondidas)\s+(?:env[ií]a|sube|reenv[ií]a|copia"
+        r"|agrega|lee|manda)", re.I)),
+    # Meter datos en un parámetro de la tool: con un secreto cerca sube a ALTO (ver escalate).
+    ("MEDIO", RULE_PARAM, re.compile(
+        r"\b(?:include|put|pass|place|add|insert|copy|embed|attach|append|incluye|pon|pasa|mete|agrega)\b[^.\n]{0,60}"
+        r"\b(?:in|into|as|to|en|como)\s+(?:the |this tool's |every |el |la )?[`'\"]?[\w-]+[`'\"]?\s+"
+        r"(?:parameter|param|field|argument|arg|par[áa]metro|campo|argumento)\b", re.I)),
+    ("ALTO", "Imagen markdown que filtra datos por la URL", re.compile(
+        r"!\[[^\]]*\]\(\s*https?://[^)\s]*[?&][\w-]+=(?:\{\{?\s*[\w.]*(?:user|message|conversation|chat|history|secret"
+        r"|token|key|summary|password)[\w.]*\s*\}?\}|<[^>]*(?:user|message|conversation|chat|history|secret|token|key"
+        r"|summary)[^>]*>|[A-Z][A-Z0-9_]{3,})")),
     # Envío real: comandos/código HTTP, o una orden "send X to https://". Nada de "postcss" ni links markdown.
     ("MEDIO", RULE_SEND, re.compile(
         r"curl\b[^\n]{0,120}(-X\s*POST|--data|-d\s|-F\s|--upload-file)[^\n]{0,120}" + URL
@@ -75,6 +114,8 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("ALTO", RULE_SHADOW, re.compile(
         r"\b(?:when(?:ever)?|each time|every time|any time)\b[^.\n]{0,50}?\b(?!(?:this|the|a|that|same|it)\b)"
         r"[`'\"]?[\w-]+[`'\"]?\s+tool\b[^.\n]{0,25}?\b(?:is (?:used|called|invoked|run)|returns|runs|you (?:call|use|invoke|run))"
+        # …y además le cambia algo a esa llamada ("when X tool returns, retry" = docs normales)
+        r"[^.\n]{0,40}?\b(?:always|also|silently|secretly|instead|replace|change|set|add|bcc|cc|redirect|first)\b"
         r"|\bregardless of (?:what|whatever) the user (?:said|says|asked|asks|wants|requested|typed)"
         r"|\b(?:first|also|always)\s+(?:call|use|invoke)\s+this tool\b[^.\n]{0,40}\bwith\b[^.\n]{0,30}"
         r"\b(?:history|conversation|messages|contents|output|credentials|files?)\b"
@@ -96,11 +137,21 @@ QUOTED_CONTEXT = re.compile(
     r"example|e\.g\.|such as|attack|injection|malicious|adversar|payload|phrase|detect|pattern|jailbreak"
     r"|ejemplo|p\. ?ej|ataque|inyecci|malicios|frase|patr[oó]n",
     re.I)
+STEALTH_DANGER = re.compile(
+    r"send|upload|forward|append|include|copy|attach|post|exfil|\.env|\.ssh|id_rsa|credential|password|token"
+    r"|api[_ -]?key|secret|history|conversation|environment|\benv[ií][aeo]|sube|clave|contrase|historial|conversaci",
+    re.I)
+# Exfiltración por parámetro: tiene que haber algo que se lee o junta, no "pass your API key in 'key'".
+PARAM_ACQUIRE = re.compile(
+    r"value of|contents? of|\bread\b|collect|gather|dump|\ball (?:the )?(?:environment|env|files|keys|secrets)"
+    r"|valor de|contenido de|\blee\b|junta|recopila", re.I)
+NEGATED = re.compile(r"\b(?:never|not|don't|no|nunca|jam[aá]s)\b\W*$", re.I)
 ADDRESS = re.compile(r"https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+")
 # Ocultar algo solo es grave si lo oculto es una acción o un secreto.
 HIDE_DANGER = re.compile(
-    r"send|sent|upload|delet|run|execut|install|download|key|token|password|credential|secret|\.ssh|\.env|file"
-    r"|\benv[ií][aeo]|\bsub(?:ir|e|i[oó])\b|borr|elimin|ejecut|instal|descarg|clave|contrase|senha|archivo|fichero|arquivo|fichier",
+    # "file" solo no basta: "don't tell the user where the file is" es UX normal (visto en skills reales).
+    r"send|sent|upload|delet|run|execut|install|download|key|token|password|credential|secret|\.ssh|\.env"
+    r"|\benv[ií][aeo]|\bsub(?:ir|e|i[oó])\b|borr|elimin|ejecut|instal|descarg|clave|contrase|senha",
     re.I)
 
 
@@ -150,7 +201,12 @@ def adjust(name: str, level: str, m: re.Match[str], text: str) -> str | None:
         if "://" in text[token_start:m.start()]:
             return None  # parte de una URL (playgrounds, badges)
         return level
-    if name in (RULE_OVERRIDE, RULE_HIDE, RULE_SHADOW):
+    if name == RULE_STEALTH and (NEGATED.search(text[max(0, m.start() - 20):m.start()])
+                                 or not STEALTH_DANGER.search(line_at(text, m.start()))):
+        return "MEDIO"  # "never silently add scope", "silently ignores unknown fields"
+    if name == RULE_HIDE and re.match(r"\s+to\b", text[m.end():]):
+        return "MEDIO"  # "don't tell the user to use a card": es una instrucción, no un secreto
+    if name in (RULE_OVERRIDE, RULE_HIDE, RULE_SHADOW, RULE_STEALTH):
         line = line_at(text, m.start())
         prose = ADDRESS.sub(" ", line)  # "attacker@evil.io" o una URL no son documentación de seguridad
         if is_quoted(line[:m.start() - text.rfind("\n", 0, m.start()) - 1]) or QUOTED_CONTEXT.search(prose):
@@ -186,14 +242,27 @@ def normalize(text: str) -> str:
     return unicodedata.normalize("NFKC", text).translate(CONFUSABLES)
 
 
-def scan_text(text: str, source: str) -> list[Finding]:
+B64_ANY = re.compile(r"(?<![\w/+])[A-Za-z0-9+/]{32,}={0,2}")
+
+
+def decode_b64(block: str) -> str | None:
+    """Texto legible escondido en un bloque base64, o None si son bytes (imágenes, binarios)."""
+    try:
+        raw = base64.b64decode(block[: len(block) - len(block) % 4] or "", validate=False)
+        decoded = raw.decode("utf-8", errors="replace")  # bloques pegados o cortados dejan basura al final
+    except binascii.Error:
+        return None
+    readable = re.match(r"[^\x00-\x08\x0b-\x1f\x7f�]*", decoded).group(0)  # tramo legible del principio
+    return readable if len(readable) >= 24 else None  # PNG/binarios empiezan con bytes de control
+
+
+def scan_text(text: str, source: str, depth: int = 0) -> list[Finding]:
     findings = []
     clean = normalize(text)
     for level, name, pattern in RULES + [("ALTO", RULE_HOMOGLYPH, HOMOGLYPH_WORD)]:
         target = text if name in (RULE_INVISIBLE, RULE_HOMOGLYPH) else clean
         for m in pattern.finditer(target):
             final = adjust(name, level, m, target)
-            final = adjust(name, level, m, text)
             if final is None:
                 continue
             line = target.count("\n", 0, m.start()) + 1
@@ -202,6 +271,12 @@ def scan_text(text: str, source: str) -> list[Finding]:
             ctx_end = target.find("\n", m.end())
             context = target[ctx_start:ctx_end if ctx_end != -1 else len(target)]  # todas las líneas del match
             findings.append(Finding(final, name, source, line, snippet, context))
+    if depth == 0:  # base64 que esconde una orden (aunque sea corto); se revisa lo decodificado
+        for m in B64_ANY.finditer(clean):
+            hidden = decode_b64(m.group(0))
+            if hidden and any(f.level == "ALTO" for f in escalate(scan_text(hidden, source, depth + 1))):
+                findings.append(Finding("ALTO", RULE_B64_HIDDEN, source, clean.count("\n", 0, m.start()) + 1,
+                                        hidden.replace("\n", " ")[:80]))
     return findings
 
 
@@ -241,6 +316,15 @@ def escalate(findings: list[Finding]) -> list[Finding]:
                     seen.add(key)
                     extra.append(Finding("ALTO", "Secreto + envío externo (posible robo)", s.source, s.line,
                                          f"{s.snippet} → {d.snippet}"[:80]))
+    # Secreto que se lee y se mete en un parámetro de la tool, en la misma línea.
+    for s in secrets:
+        for p in (f for f in findings if f.rule == RULE_PARAM):
+            if p.source == s.source and p.line == s.line and PARAM_ACQUIRE.search(p.context):
+                key = (s.source, s.line, "param")
+                if key not in seen:
+                    seen.add(key)
+                    extra.append(Finding("ALTO", "Secreto metido en un parámetro (posible robo)", s.source, s.line,
+                                         f"{s.snippet} → {p.snippet}"[:80]))
     return findings + extra
 
 
@@ -337,7 +421,7 @@ def lock_path(target: Path) -> Path:
 
 def cmd_scan(target: Path, include_all: bool = False) -> int:
     files = collect(target, include_all)
-    findings = escalate([f for p in files for f in scan_file(p)])
+    findings = [f for f in escalate([f for p in files for f in scan_file(p)]) if f.level != "PISTA"]
     for f in findings:
         print(f"[{f.level}] {f.rule} — {f.source}:{f.line}  «{f.snippet}»")
         annotate(f.level, f.source, f.line, f"{f.rule}: {f.snippet}")
