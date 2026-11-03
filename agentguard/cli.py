@@ -8,6 +8,8 @@ Uso:
   agentguard cve [carpeta]      CVE conocidos de los servidores MCP instalados (OSV.dev)
   agentguard trifecta [carpeta] [--tools dir]
                                 tríada letal: datos privados + contenido no confiable + salida
+  agentguard audit [--skills dir] [--config archivo] [--sin-red] [--out reporte.md]
+                                reporte de auditoría en Markdown (scan + cve + trifecta)
 Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI).
 """
 from __future__ import annotations
@@ -92,6 +94,9 @@ def main(argv: list[str]) -> int:
     if len(argv) >= 2 and argv[1] == "trifecta":
         from .trifecta import cmd_trifecta
         return cmd_trifecta(argv[2:])
+    if len(argv) >= 2 and argv[1] == "audit":
+        from .audit import cmd_audit
+        return cmd_audit(argv[2:])
     include_all = "--all" in argv
     argv = [a for a in argv if a != "--all"]
     if len(argv) == 2 and argv[1] not in COMMANDS:  # compatibilidad: scan por defecto
