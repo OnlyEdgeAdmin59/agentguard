@@ -7,6 +7,7 @@
 - **Para destrabarlo (lo decide Charlie):**
   1. Usar un benchmark público de prompt injection / tool poisoning, respetando su licencia. Bajarlo requiere tu aprobación (archivo, fuente y tamaño).
   2. O que una persona escriba los casos a mano en `tests/corpus_holdout_v2/{benign,malicious}/`, sin ver las reglas, con el formato de `tests/corpus/README.md`.
+- **Resuelto (2026-11-02):** Charlie eligió el benchmark público `deepset/prompt-injections` (Apache 2.0). Ver `tests/corpus_holdout_v2/README.md` y `reports/holdout_v2_antes.md`.
 
 ## 2026-11-02: rediseño por familias (tarea 2), detenido
 - **Qué pasó:** al escribir el módulo nuevo de señales por familia, un filtro de seguridad frenó mi respuesta. Quedó un archivo a medio escribir, sin seguimiento en git, y lo quité. El scanner quedó igual que en el commit anterior y los tests pasan.

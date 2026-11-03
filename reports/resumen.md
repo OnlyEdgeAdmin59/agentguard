@@ -1,5 +1,12 @@
 # Resumen: rama `feat/fase0-fase1` (actualizado 2026-11-02, tercer loop)
 
+## Holdout v2 con benchmark público (2026-11-02)
+- Fuente: `deepset/prompt-injections` (Hugging Face, Apache 2.0, revisión fijada), elegido por Charlie. Importado con `scripts/importar_deepset.py` en `tests/corpus_holdout_v2/`: **263 inyecciones y 399 textos normales**. Unas 73 inyecciones están en alemán.
+- **Antes del rediseño: detecta 5/263 (2%), falsos positivos 2/399, 0 benignos con MEDIO** (`reports/holdout_v2_antes.md`).
+- Lectura: el scanner busca envenenamiento de herramientas (órdenes escondidas en descripciones, exfiltración, unicode). La mayoría de estos casos son inyecciones directas de chat. Una cifra tan baja muestra el hueco de las reglas fijas fuera de sus frases.
+- El holdout queda ciego: solo se miraron conteos. No se usa para ajustar.
+- **Sigue pendiente:** el rediseño por familias (lo hace una persona o una sesión supervisada).
+
 ## Tercer loop (holdout v2 + rediseño por familias): bloqueado
 - **Holdout v2 ciego: no se creó.** Un filtro de seguridad frenó al subagente dos veces: primero con la mitad maliciosa y después con la benigna. No se reintentó.
 - **Rediseño por familias: no se hizo.** Un filtro de seguridad también frenó mi respuesta mientras escribía el módulo nuevo. Quité el archivo a medio escribir, así que el scanner sigue igual que al final del segundo loop.
