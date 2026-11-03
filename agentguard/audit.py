@@ -41,6 +41,7 @@ FIX_SCAN = [
     ("invisibles", "Elimina los caracteres invisibles (U+200B, tags U+E00xx, bidi) con un editor que los muestre."),
 ]
 FIX_DEFAULT = "Revisa el fragmento y decide si es legítimo."
+MAX_PLACES = 5  # lugares que se listan por regla MEDIO agrupada
 
 
 @dataclass
@@ -75,9 +76,20 @@ def audit_scan(skills: Path, out: Audit) -> None:
     files = collect(skills)
     with redirect_stdout(io.StringIO()):
         findings = [f for f in escalate([f for p in files for f in scan_file(p)]) if f.level != "PISTA"]
+    where = lambda f: f"{show(f.source.split('::')[0])}:{f.line}"  # noqa: E731
     for f in findings:
-        out.items.append(Item("Alto" if f.level == "ALTO" else "Medio", "scan", f.rule,
-                              f"{show(f.source.split('::')[0])}:{f.line}", f"«{f.snippet}»", fix_for(f.rule)))
+        if f.level == "ALTO":
+            out.items.append(Item("Alto", "scan", f.rule, where(f), f"«{f.snippet}»", fix_for(f.rule)))
+    medios: dict[str, list] = {}
+    for f in findings:  # los MEDIO se agrupan por regla para que el reporte se pueda leer
+        if f.level == "MEDIO":
+            medios.setdefault(f.rule, []).append(f)
+    for rule, group in medios.items():
+        files = {f.source.split("::")[0] for f in group}
+        shown = ", ".join(where(f) for f in group[:MAX_PLACES]) + (" …" if len(group) > MAX_PLACES else "")
+        detail = f"«{group[0].snippet}»" if len(group) == 1 else f"{len(group)} veces en {len(files)} archivo(s): {shown}"
+        out.items.append(Item("Medio", "scan", rule, where(group[0]) if len(group) == 1 else "varios", detail,
+                              fix_for(rule)))
     altos = sum(f.level == "ALTO" for f in findings)
     out.resumen.append(f"**scan**: {len(files)} archivo(s) revisados, {len(findings)} hallazgo(s), {altos} ALTO(s).")
 

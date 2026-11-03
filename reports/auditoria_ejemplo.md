@@ -8,7 +8,7 @@ Alcance: ejemplo con fixtures: skills `ejemplos`, config `tests/fixtures/cve/cla
 
 **Riesgo general: Alto.**
 
-- **scan**: 2 archivo(s) revisados, 6 hallazgo(s), 2 ALTO(s).
+- **scan**: 1 archivo(s) revisados, 6 hallazgo(s), 2 ALTO(s).
 - **cve**: 6 servidor(es), 4 con versión fija consultados en OSV.dev, 1 vulnerabilidad(es).
 - **trifecta**: tríada letal en 1 de 1 alcance(s) (global y cada proyecto).
 
@@ -16,7 +16,7 @@ Alcance: ejemplo con fixtures: skills `ejemplos`, config `tests/fixtures/cve/cla
 |---|---|
 | Crítico | 1 |
 | Alto | 3 |
-| Medio | 4 |
+| Medio | 3 |
 | Bajo | 0 |
 | Info | 2 |
 
@@ -42,30 +42,26 @@ Alcance: ejemplo con fixtures: skills `ejemplos`, config `tests/fixtures/cve/cla
 - Detalle: Lee datos privados: filesystem (tabla), git (tabla), docker (tabla); Trae contenido no confiable: remote-ok (heurística), fetch (tabla), win-wrapped (tabla), docker (tabla); Envía hacia afuera: fetch (tabla), win-wrapped (tabla), docker (tabla)
 - Cómo arreglar: Quita una de estas opciones: filesystem, git, docker | fetch, win-wrapped, docker. docker junta las tres solo: limita sus tools (solo lectura, repos permitidos).
 
-### Medio (4)
+### Medio (3)
 
-**H-05 · Menciona secretos** — scan · ejemplos/malicioso_tools.json:1
-- Detalle: «.ssh»
+**H-05 · Menciona secretos** — scan · varios
+- Detalle: 2 veces en 1 archivo(s): ejemplos/malicioso_tools.json:1, ejemplos/malicioso_tools.json:1
 - Cómo arreglar: Confirma que solo explica dónde poner la llave y no le pide al modelo leerla.
 
-**H-06 · Menciona secretos** — scan · ejemplos/malicioso_tools.json:1
-- Detalle: «id_rsa»
-- Cómo arreglar: Confirma que solo explica dónde poner la llave y no le pide al modelo leerla.
-
-**H-07 · Envío de datos a URL externa** — scan · ejemplos/malicioso_tools.json:1
+**H-06 · Envío de datos a URL externa** — scan · ejemplos/malicioso_tools.json:1
 - Detalle: «send it to https://»
 - Cómo arreglar: Confirma que el dominio es del autor y que el envío hace falta; si no, quítalo.
 
-**H-08 · Etiquetas de urgencia para el modelo** — scan · ejemplos/malicioso_tools.json:1
+**H-07 · Etiquetas de urgencia para el modelo** — scan · ejemplos/malicioso_tools.json:1
 - Detalle: «<IMPORTANT>»
 - Cómo arreglar: Quita etiquetas tipo <IMPORTANT> dirigidas al modelo; una descripción honesta no las necesita.
 
 ### Info (2)
 
-**H-09 · mcp-server-fetch (PyPI): versión no fijada (se ejecuta la última)** — cve · archivo · fetch
+**H-08 · mcp-server-fetch (PyPI): versión no fijada (se ejecuta la última)** — cve · archivo · fetch
 - Cómo arreglar: Fija la versión exacta (`pkg@1.2.3` / `pkg==1.2.3`) para que no cambie sin que lo apruebes.
 
-**H-10 · docker: comando 'docker' no indica un paquete npm/PyPI** — cve · archivo · docker
+**H-09 · docker: comando 'docker' no indica un paquete npm/PyPI** — cve · archivo · docker
 - Cómo arreglar: Revísalo a mano: no se puede consultar en OSV.
 
 ## Revisión manual
