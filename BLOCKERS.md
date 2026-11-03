@@ -7,3 +7,9 @@
 - **Para destrabarlo (lo decide Charlie):**
   1. Usar un benchmark público de prompt injection / tool poisoning, respetando su licencia. Bajarlo requiere tu aprobación (archivo, fuente y tamaño).
   2. O que una persona escriba los casos a mano en `tests/corpus_holdout_v2/{benign,malicious}/`, sin ver las reglas, con el formato de `tests/corpus/README.md`.
+
+## 2026-11-02: rediseño por familias (tarea 2), detenido
+- **Qué pasó:** al escribir el módulo nuevo de señales por familia, un filtro de seguridad frenó mi respuesta. Quedó un archivo a medio escribir, sin seguimiento en git, y lo quité. El scanner quedó igual que en el commit anterior y los tests pasan.
+- **Decisión:** mismo criterio que arriba: no se reintenta ni se reformula para sortear el filtro.
+- **Efecto:** no se hicieron las tareas 2 a 4 (familias, control de ruido de cada cambio, holdout v2 después). La herramienta de control de ruido (`scripts/ruido_skills.py` + `reports/ruido_base.json`) sí quedó lista para cuando se retome.
+- **Para destrabarlo (lo decide Charlie):** que el rediseño lo escriba una persona, o seguirlo en otra sesión con supervisión directa tuya. La base de ruido ya está guardada.

@@ -1,4 +1,17 @@
-# Resumen: rama `feat/fase0-fase1` (actualizado 2026-11-02, segundo loop)
+# Resumen: rama `feat/fase0-fase1` (actualizado 2026-11-02, tercer loop)
+
+## Tercer loop (holdout v2 + rediseño por familias): bloqueado
+- **Holdout v2 ciego: no se creó.** Un filtro de seguridad frenó al subagente dos veces: primero con la mitad maliciosa y después con la benigna. No se reintentó.
+- **Rediseño por familias: no se hizo.** Un filtro de seguridad también frenó mi respuesta mientras escribía el módulo nuevo. Quité el archivo a medio escribir, así que el scanner sigue igual que al final del segundo loop.
+- **Sí quedó:** `scripts/ruido_skills.py` + `reports/ruido_base.json`, el control de ruido sobre tus skills reales, que guarda solo números.
+  - Base: 2984 archivos, ALTO 1, MEDIO 1618.
+  - Límites: ALTO ≤ 1, MEDIO ≤ 1779 (+10%).
+- **Holdout v2 después / comparación:** no hay datos. Las cifras vigentes siguen siendo las del segundo loop (abajo): corpus 33/33, holdout v1 10/23, 1 falso positivo.
+- Detalle y opciones para destrabarlo en `BLOCKERS.md`.
+
+---
+
+# Segundo loop
 
 Todo en commits locales. Sin push, sin release, sin PyPI, sin tocar `.github/workflows` ni secretos, sin borrar archivos.
 Suite: `python -m unittest discover tests` → **26 tests, OK** (2 de red saltados por defecto).
