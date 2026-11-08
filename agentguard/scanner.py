@@ -86,7 +86,11 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("MEDIO", RULE_PARAM, re.compile(
         r"\b(?:include|put|pass|place|add|insert|copy|embed|attach|append|incluye|pon|pasa|mete|agrega)\b[^.\n]{0,60}"
         r"\b(?:in|into|as|to|en|como)\s+(?:the |this tool's |every |el |la )?[`'\"]?[\w-]+[`'\"]?\s+"
-        r"(?:parameter|param|field|argument|arg|par[áa]metro|campo|argumento)\b", re.I)),
+        r"(?:parameter|param|field|argument|arg|par[áa]metro|campo|argumento)\b"
+        # Orden inverso: "copia en el parámetro 'contexto' …", "put into the field `notes` …"
+        r"|\b(?:include|put|pass|place|add|insert|copy|embed|attach|append|incluye|pon|pasa|mete|agrega|copia|a[ñn]ade)\b"
+        r"[^.\n]{0,60}?\b(?:in|into|en)\s+(?:the |el |la )(?:parameter|param|field|argument|par[áa]metro|campo|argumento)"
+        r"\s+[`'\"]?[\w-]+", re.I)),
     ("ALTO", "Imagen markdown que filtra datos por la URL", re.compile(
         r"!\[[^\]]*\]\(\s*https?://[^)\s]*[?&][\w-]+=(?:\{\{?\s*[\w.]*(?:user|message|conversation|chat|history|secret"
         r"|token|key|summary|password)[\w.]*\s*\}?\}|<[^>]*(?:user|message|conversation|chat|history|secret|token|key"
@@ -151,7 +155,7 @@ STEALTH_DANGER = re.compile(
     re.I)
 # Exfiltración por parámetro: tiene que haber algo que se lee o junta, no "pass your API key in 'key'".
 PARAM_ACQUIRE = re.compile(
-    r"value of|contents? of|\bread\b|collect|gather|dump|\ball (?:the )?(?:environment|env|files|keys|secrets)"
+    r"value of|contents? (?:\w+ )?of|contenido (?:\w+ )?de|\bread\b|collect|gather|dump|\ball (?:the )?(?:environment|env|files|keys|secrets)"
     r"|valor de|contenido de|\blee\b|junta|recopila", re.I)
 NEGATED = re.compile(r"\b(?:never|not|don't|no|nunca|jam[aá]s)\b\W*$", re.I)
 ADDRESS = re.compile(r"https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+")
