@@ -68,7 +68,8 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"|\bne\s+(?:le\s+|lui\s+)?(?:dis|dites|mentionne[sz]?|montre[sz]?)\s+(?:pas|rien)\b[^.\n]{0,40}utilisateur",
         re.I)),
     ("MEDIO", RULE_SECRET,
-     re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json)", re.I)),
+     re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json"
+                r"|gh/hosts\.ya?ml|\.netrc|\.git-credentials|\.npmrc|\.pypirc|\.docker/config\.json|\.kube/config)", re.I)),
     # PISTA = no se muestra sola; solo cuenta para escalar con un envío o un parámetro (si no, duplica el ruido).
     ("PISTA", RULE_SECRET,  # AWS_SECRET_KEY, GITHUB_TOKEN…, "all environment variables"
      re.compile(r"\b[A-Z][A-Z0-9]*_(?:SECRET(?:_ACCESS)?_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY)\b"
@@ -101,6 +102,7 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         + r"|curl\b[^\n]{0,120}" + URL + r"[^\n]{0,120}(-X\s*POST|--data|-d\s|-F\s|--upload-file)"
         + r"|\b(requests|httpx|axios|session|client)\.(post|put)\(\s*f?[\"'`]" + URL
         + r"|fetch\(\s*[\"'`]" + URL + r"[^)]{0,200}method\s*:\s*[\"']?(POST|PUT)"
+        + r"|\b(?:urlopen|Request)\(\s*[\"'`]" + URL + r"[^\n]{0,200}\bdata\s*="  # urllib con cuerpo = POST
         + r"|\b(send|upload|forward|exfiltrate|post|transmit)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
         + r"|\b(env[ií]a(?:lo|la|los|las|r)?|env[ií]e(?:lo|la)?|manda(?:lo|la|r)?|sube(?:lo|la)?|subir|reenv[ií]a(?:lo|la)?"
         r"|transmite|exfiltra|envoie[sz]?|envi[ae]-?(?:o|a)?)\b(?:[^.\n]|\.(?=\S)){0,60}\b(?:a|para|à|al)\b\s*[`\"'(<]?" + URL,
