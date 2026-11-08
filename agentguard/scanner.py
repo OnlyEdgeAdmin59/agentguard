@@ -113,6 +113,9 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"[`'\"]?[\w-]+[`'\"]?\s+tool\b[^.\n]{0,25}?\b(?:is (?:used|called|invoked|run)|returns|runs|you (?:call|use|invoke|run))"
         # …y además le cambia algo a esa llamada ("when X tool returns, retry" = docs normales)
         r"[^.\n]{0,40}?\b(?:always|also|silently|secretly|instead|replace|change|set|add|bcc|cc|redirect|first)\b"
+        # "For every call to create_pull_request, set…": cambia los argumentos de otra tool (nombre tipo snake_case).
+        r"|\b(?:for|on|before|after|in)\s+(?:every|each|any|all)\s+calls?\s+(?:to|of)\s+[`'\"]?[a-z]+_[\w]+[`'\"]?"
+        r"[^.\n]{0,20}?\b(?:always|set|add|replace|change|prefix|redirect|instead|remove|leave)\b"
         # Lo mismo en español: "cuando uses la herramienta X, cambia siempre…"
         r"|\b(?:cuando|cada vez que|siempre que)\b[^.\n]{0,20}?\b(?:uses|llames|invoques|ejecutes|se use|se llame)\s+"
         r"(?:a\s+)?(?:la\s+)?(?:herramienta|tool)\s+(?!(?:esta|este|la misma|misma)\b)[`'\"]?[\w-]+[`'\"]?[^.\n]{0,40}?"
