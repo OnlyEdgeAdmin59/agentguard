@@ -77,7 +77,7 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     # Grave solo si lo escondido es un envío o un secreto (STEALTH_DANGER).
     ("ALTO", RULE_STEALTH, re.compile(
         r"\b(?:silently|secretly|quietly|covertly|discreetly)\s+(?:send|upload|forward|append|include|copy|attach|post"
-        r"|call|add|read|collect|exfiltrate|share|transmit)\b"
+        r"|call|add|read|collect|exfiltrate|share|transmit|run|execute|install|download)\b"
         r"|\bwithout (?:telling|informing|notifying|alerting) (?:the )?user\b"
         r"|\b(?:env[ií]a|sube|reenv[ií]a|copia|agrega|lee|manda)\w*\s+(?:en secreto|silenciosamente|discretamente"
         r"|a escondidas)\b|\b(?:en secreto|silenciosamente|discretamente|a escondidas)\s+(?:env[ií]a|sube|reenv[ií]a|copia"
@@ -140,6 +140,7 @@ QUOTED_CONTEXT = re.compile(
     re.I)
 STEALTH_DANGER = re.compile(
     r"send|upload|forward|append|include|copy|attach|post|exfil|\.env|\.ssh|id_rsa|credential|password|token"
+    r"|\|\s*(?:sudo\s+)?(?:ba|z)?sh\b|\biex\b"  # script remoto a la shell: "curl … | sh"
     r"|api[_ -]?key|secret|history|conversation|environment|\benv[ií][aeo]|sube|clave|contrase|historial|conversaci",
     re.I)
 # Exfiltración por parámetro: tiene que haber algo que se lee o junta, no "pass your API key in 'key'".
