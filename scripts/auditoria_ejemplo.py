@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from agentguard.audit import build, render  # noqa: E402
 from agentguard.cve import osv  # noqa: E402
+from agentguard.i18n import set_lang  # noqa: E402
 
 FIX = ROOT / "tests" / "fixtures" / "cve"
 SAVED = {"mcp-remote": "GHSA-6xpm-ggf7-wc3p"}  # solo vulnerabilidades reales guardadas como fixture
@@ -36,12 +37,19 @@ def offline_check(packages):
 def main() -> int:
     os.chdir(ROOT)  # rutas relativas al repo en el reporte
     config = FIX / "claude_desktop_config.json"
-    audit = build(skills=ROOT / "ejemplos", config=config, check_fn=offline_check)
-    text = render(audit, date(2026, 11, 2), "ejemplo con fixtures: skills `ejemplos`, config "
-                                            "`tests/fixtures/cve/claude_desktop_config.json`, OSV guardado")
-    out = ROOT / "reports" / "auditoria_ejemplo.md"
-    out.write_text(text, encoding="utf-8")
-    print(f"{len(audit.items)} hallazgo(s) -> {out}")
+    scopes = {
+        "es": ("auditoria_ejemplo.md", "ejemplo con fixtures: skills `ejemplos`, config "
+                                       "`tests/fixtures/cve/claude_desktop_config.json`, OSV guardado"),
+        "en": ("audit_example_en.md", "fixture example: skills `ejemplos`, config "
+                                      "`tests/fixtures/cve/claude_desktop_config.json`, saved OSV data"),
+    }
+    for lang, (name, scope) in scopes.items():
+        set_lang(lang)
+        audit = build(skills=ROOT / "ejemplos", config=config, check_fn=offline_check)
+        out = ROOT / "reports" / name
+        out.write_text(render(audit, date(2026, 11, 2), scope), encoding="utf-8")
+        print(f"{len(audit.items)} hallazgo(s) -> {out}")
+    set_lang("es")
     return 0
 
 

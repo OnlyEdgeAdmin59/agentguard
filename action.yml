@@ -12,6 +12,9 @@ inputs:
   verify:
     description: "Comparar contra agentguard.lock.json si existe (true/false)"
     default: "true"
+  lang:
+    description: "Idioma de la salida: es o en"
+    default: "es"
 
 runs:
   using: "composite"
@@ -22,6 +25,7 @@ runs:
       env:
         AG_PATH: ${{ inputs.path }}
         AG_VERIFY: ${{ inputs.verify }}
+        AGENTGUARD_LANG: ${{ inputs.lang }}
       run: |
         set +e
         python3 "$GITHUB_ACTION_PATH/agentguard.py" scan "$AG_PATH" | tee /tmp/ag_scan.txt

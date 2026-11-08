@@ -10,6 +10,7 @@ Uso:
                                 tríada letal: datos privados + contenido no confiable + salida
   agentguard audit [--skills dir] [--config archivo] [--sin-red] [--out reporte.md]
                                 reporte de auditoría en Markdown (scan + cve + trifecta)
+Opción global: --lang en (o AGENTGUARD_LANG=en) para salida en inglés.
 Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI).
 """
 from __future__ import annotations
@@ -19,7 +20,24 @@ import os
 import sys
 from pathlib import Path
 
+from .i18n import get_lang, pop_lang, t
 from .scanner import collect, escalate, fingerprints, lock_path, scan_file
+
+USAGE_EN = """agentguard: security for AI agent skills (SKILL.md) and MCP tools (JSON).
+
+Usage:
+  agentguard scan   <folder> [--all]    detect tool poisoning
+                                        (--all includes node_modules, CHANGELOG, etc.)
+  agentguard lock   <folder>   save fingerprints to agentguard.lock.json
+  agentguard verify <folder>   alert if anything changed (rug pull)
+  agentguard cve [folder]      known CVEs in installed MCP servers (OSV.dev)
+  agentguard trifecta [folder] [--tools dir]
+                               lethal trifecta: private data + untrusted content + outbound
+  agentguard audit [--skills dir] [--config file] [--project dir] [--tools dir] [--offline] [--out report.md]
+                               Markdown audit report (scan + cve + trifecta)
+Global option: --lang en (or AGENTGUARD_LANG=en) for English output.
+Exits with code 1 on HIGH findings or changes (useful in CI).
+"""
 
 IN_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -30,25 +48,26 @@ def annotate(level: str, file: str, line: int, msg: str) -> None:
         return
     kind = "error" if level == "ALTO" else "warning"
     loc = f"file={file.split('::')[0]},line={max(line, 1)}"
-    print(f"::{kind} {loc},title=agentguard {level}::{msg}")
+    print(f"::{kind} {loc},title=agentguard {t(level)}::{msg}")
 
 
 def cmd_scan(target: Path, include_all: bool = False) -> int:
     files = collect(target, include_all)
     findings = [f for f in escalate([f for p in files for f in scan_file(p)]) if f.level != "PISTA"]
     for f in findings:
-        print(f"[{f.level}] {f.rule} — {f.source}:{f.line}  «{f.snippet}»")
-        annotate(f.level, f.source, f.line, f"{f.rule}: {f.snippet}")
+        print(f"[{t(f.level)}] {t(f.rule)} — {f.source}:{f.line}  «{f.snippet}»")
+        annotate(f.level, f.source, f.line, f"{t(f.rule)}: {f.snippet}")
     altos = sum(f.level == "ALTO" for f in findings)
-    hint = "" if include_all else " (excluye node_modules, CHANGELOG, LICENSE…; usá --all para incluirlos)"
-    print(f"\n{len(files)} archivo(s), {len(findings)} hallazgo(s), {altos} ALTO(s){hint}")
+    hint = "" if include_all else t(" (excluye node_modules, CHANGELOG, LICENSE…; usá --all para incluirlos)")
+    print(t("\n{files} archivo(s), {findings} hallazgo(s), {high} ALTO(s){hint}",
+            files=len(files), findings=len(findings), high=altos, hint=hint))
     return 1 if altos else 0
 
 
 def cmd_lock(target: Path) -> int:
     prints = fingerprints(target)
     lock_path(target).write_text(json.dumps(prints, indent=2, sort_keys=True), encoding="utf-8")
-    print(f"Guardadas {len(prints)} huella(s) en {lock_path(target)}")
+    print(t("Guardadas {n} huella(s) en {path}", n=len(prints), path=lock_path(target)))
     return 0
 
 
@@ -56,21 +75,21 @@ def cmd_verify(target: Path) -> int:
     try:
         old = json.loads(lock_path(target).read_text(encoding="utf-8"))
     except FileNotFoundError:
-        print("No hay lock. Corré primero: agentguard lock <carpeta>")
+        print(t("No hay lock. Corré primero: agentguard lock <carpeta>"))
         return 2
     new = fingerprints(target)
     changed = sorted(k for k in old.keys() & new.keys() if old[k] != new[k])
     added = sorted(new.keys() - old.keys())
     removed = sorted(old.keys() - new.keys())
     for k in changed:
-        print(f"[ALTO] CAMBIÓ desde que lo aprobaste: {k}")
-        annotate("ALTO", str(lock_path(target).parent / k), 1, "Cambió desde que se aprobó (posible rug pull)")
+        print(t("[ALTO] CAMBIÓ desde que lo aprobaste: {k}", k=k))
+        annotate("ALTO", str(lock_path(target).parent / k), 1, t("Cambió desde que se aprobó (posible rug pull)"))
     for k in added:
-        print(f"[MEDIO] Nuevo, sin aprobar: {k}")
+        print(t("[MEDIO] Nuevo, sin aprobar: {k}", k=k))
     for k in removed:
-        print(f"[INFO] Eliminado: {k}")
+        print(t("[INFO] Eliminado: {k}", k=k))
     if not (changed or added or removed):
-        print("Todo igual que cuando lo aprobaste.")
+        print(t("Todo igual que cuando lo aprobaste."))
     return 1 if changed or added else 0
 
 
@@ -84,6 +103,7 @@ def main(argv: list[str]) -> int:
             stream.reconfigure(encoding="utf-8", errors="backslashreplace")
         except (AttributeError, ValueError):
             pass
+    argv = pop_lang(list(argv))
     if argv[1:] == ["--version"]:
         from . import __version__
         print(f"agentguard {__version__}")
@@ -102,7 +122,7 @@ def main(argv: list[str]) -> int:
     if len(argv) == 2 and argv[1] not in COMMANDS:  # compatibilidad: scan por defecto
         argv = [argv[0], "scan", argv[1]]
     if len(argv) != 3 or argv[1] not in COMMANDS:
-        print(__doc__)
+        print(USAGE_EN if get_lang() == "en" else __doc__)
         return 2
     if argv[1] == "scan":
         return cmd_scan(Path(argv[2]), include_all)

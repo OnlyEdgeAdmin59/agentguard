@@ -1,5 +1,13 @@
 # Cambios
 
+## 0.3.0
+
+### Nuevo
+- **Salida en inglés**: `--lang en` en cualquier comando o `AGENTGUARD_LANG=en`. Traduce scan, lock/verify, cve, trifecta y el reporte de `audit` completo (incluye cómo arreglar cada hallazgo y los motivos de la tabla de servidores conocidos). La lógica interna no cambia y la salida en español queda idéntica.
+- `audit` acepta `--project` y `--offline` como alias de `--proyecto` y `--sin-red`.
+- GitHub Action: input `lang` (`es` o `en`).
+- Reporte de ejemplo en inglés: `reports/audit_example_en.md`.
+
 ## 0.2.0 (sin publicar todavía)
 
 ### Nuevo
