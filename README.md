@@ -29,6 +29,15 @@ agentguard trifecta [carpeta | archivo_config] [--tools carpeta]
 agentguard audit  [--skills carpeta] [--config archivo] [--tools carpeta] [--sin-red] [--out reporte.md]
 ```
 
+### Idioma / Language
+La salida está en español por defecto. Para inglés, agrega `--lang en` a cualquier comando o usa la variable de entorno `AGENTGUARD_LANG=en`. El reporte de `audit` también sale en inglés (ejemplo: [reports/audit_example_en.md](reports/audit_example_en.md)).
+
+Output is in Spanish by default. For English, add `--lang en` to any command or set `AGENTGUARD_LANG=en`. `audit` also accepts `--project` and `--offline` (aliases of `--proyecto` and `--sin-red`).
+```bash
+agentguard scan ./my-skills --lang en
+agentguard audit --skills ~/.claude/skills --offline --out report.md --lang en
+```
+
 ### cve
 ```bash
 agentguard cve                                  # configs de Claude Desktop, Claude Code, Cursor y VS Code
@@ -73,3 +82,9 @@ Genera un reporte con resumen ejecutivo, hallazgos por severidad, cómo arreglar
 - uses: OnlyEdgeAdmin59/agentguard@v0.1.5
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
+Con `lang: en` la salida y las anotaciones salen en inglés:
+```yaml
+- uses: OnlyEdgeAdmin59/agentguard@v0.3.0
+  with:
+    lang: en
+```

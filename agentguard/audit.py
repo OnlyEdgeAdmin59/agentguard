@@ -3,6 +3,7 @@
 Uso: agentguard audit [--skills carpeta] [--config archivo] [--proyecto carpeta] [--tools carpeta]
                       [--sin-red] [--out reporte.md]
 Sin --config revisa las configs MCP instaladas (como `cve` y `trifecta`). --sin-red no consulta OSV.dev.
+En inglés: --project equivale a --proyecto y --offline a --sin-red.
 Sale con código 1 si hay hallazgos Críticos o Altos.
 """
 from __future__ import annotations
@@ -13,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from .i18n import get_lang, t, t_note, t_scope
 from .cve import check, inventory, servers_from_file
 from .scanner import collect, escalate, scan_file
 from .trifecta import CAPS, LABEL, analyze, groups, scopes_of
@@ -41,6 +43,13 @@ FIX_SCAN = [
     ("invisibles", "Elimina los caracteres invisibles (U+200B, tags U+E00xx, bidi) con un editor que los muestre."),
 ]
 FIX_DEFAULT = "Revisa el fragmento y decide si es legítimo."
+USAGE_EN = """Markdown audit report: combines scan, cve and trifecta.
+
+Usage: agentguard audit [--skills folder] [--config file] [--project folder] [--tools folder]
+                        [--offline] [--out report.md]
+Without --config it checks the installed MCP configs (like `cve` and `trifecta`). --offline skips OSV.dev.
+Exits with code 1 on Critical or High findings.
+"""
 MAX_PLACES = 5  # lugares que se listan por regla MEDIO agrupada
 
 
@@ -69,7 +78,7 @@ def show(path: str | Path) -> str:
 
 
 def fix_for(rule: str) -> str:
-    return next((fix for key, fix in FIX_SCAN if key.lower() in rule.lower()), FIX_DEFAULT)
+    return t(next((fix for key, fix in FIX_SCAN if key.lower() in rule.lower()), FIX_DEFAULT))
 
 
 def audit_scan(skills: Path, out: Audit) -> None:
@@ -79,7 +88,7 @@ def audit_scan(skills: Path, out: Audit) -> None:
     where = lambda f: f"{show(f.source.split('::')[0])}:{f.line}"  # noqa: E731
     for f in findings:
         if f.level == "ALTO":
-            out.items.append(Item("Alto", "scan", f.rule, where(f), f"«{f.snippet}»", fix_for(f.rule)))
+            out.items.append(Item("Alto", "scan", t(f.rule), where(f), f"«{f.snippet}»", fix_for(f.rule)))
     medios: dict[str, list] = {}
     for f in findings:  # los MEDIO se agrupan por regla para que el reporte se pueda leer
         if f.level == "MEDIO":
@@ -87,40 +96,43 @@ def audit_scan(skills: Path, out: Audit) -> None:
     for rule, group in medios.items():
         files = {f.source.split("::")[0] for f in group}
         shown = ", ".join(where(f) for f in group[:MAX_PLACES]) + (" …" if len(group) > MAX_PLACES else "")
-        detail = f"«{group[0].snippet}»" if len(group) == 1 else f"{len(group)} veces en {len(files)} archivo(s): {shown}"
-        out.items.append(Item("Medio", "scan", rule, where(group[0]) if len(group) == 1 else "varios", detail,
+        detail = (f"«{group[0].snippet}»" if len(group) == 1
+                  else t("{n} veces en {files} archivo(s): {shown}", n=len(group), files=len(files), shown=shown))
+        out.items.append(Item("Medio", "scan", t(rule), where(group[0]) if len(group) == 1 else t("varios"), detail,
                               fix_for(rule)))
     altos = sum(f.level == "ALTO" for f in findings)
-    out.resumen.append(f"**scan**: {len(files)} archivo(s) revisados, {len(findings)} hallazgo(s), {altos} ALTO(s).")
+    out.resumen.append(t("**scan**: {files} archivo(s) revisados, {findings} hallazgo(s), {high} ALTO(s).",
+                         files=len(files), findings=len(findings), high=altos))
 
 
 def audit_cve(servers: list, check_fn, out: Audit) -> None:
     for s in servers:
         if s.note:
             what = f"{s.package.name} ({s.package.ecosystem})" if s.package else s.name
-            fix = ("Fija la versión exacta (`pkg@1.2.3` / `pkg==1.2.3`) para que no cambie sin que lo apruebes."
-                   if "no fijada" in s.note else "Revísalo a mano: no se puede consultar en OSV.")
-            out.items.append(Item("Info", "cve", f"{what}: {s.note}", f"{s.client} · {s.name}", "", fix))
+            fix = t("Fija la versión exacta (`pkg@1.2.3` / `pkg==1.2.3`) para que no cambie sin que lo apruebes."
+                    if "no fijada" in s.note else "Revísalo a mano: no se puede consultar en OSV.")
+            out.items.append(Item("Info", "cve", f"{what}: {t_note(s.note)}", f"{t(s.client)} · {s.name}", "", fix))
     packages = [s.package for s in servers if s.package and s.package.version]
     if check_fn is None:
-        out.resumen.append(f"**cve**: {len(servers)} servidor(es); OSV.dev no se consultó (--sin-red).")
+        out.resumen.append(t("**cve**: {servers} servidor(es); OSV.dev no se consultó (--sin-red).", servers=len(servers)))
         return
     try:
         vulns = check_fn(packages)
     except OSError as e:
-        out.items.append(Item("Info", "cve", "No se pudo consultar OSV.dev", "red", str(e),
-                              "Vuelve a correr `agentguard cve` con conexión."))
-        out.resumen.append(f"**cve**: {len(servers)} servidor(es); OSV.dev no respondió.")
+        out.items.append(Item("Info", "cve", t("No se pudo consultar OSV.dev"), t("red"), str(e),
+                              t("Vuelve a correr `agentguard cve` con conexión.")))
+        out.resumen.append(t("**cve**: {servers} servidor(es); OSV.dev no respondió.", servers=len(servers)))
         return
     for v in vulns:
         fixed = v.fixed != "sin corrección"
-        fix = (f"Actualiza {v.package.name} a {v.fixed}." if fixed
-               else "No hay versión corregida: quita el servidor o aíslalo.")
-        detail = f"{v.id} · severidad {v.severity}" + (f" · {v.summary}" if v.summary else "")
+        fix = (t("Actualiza {pkg} a {fixed}.", pkg=v.package.name, fixed=v.fixed) if fixed
+               else t("No hay versión corregida: quita el servidor o aíslalo."))
+        detail = t("{id} · severidad {severity}", id=v.id, severity=t(v.severity)) + (f" · {v.summary}" if v.summary else "")
         out.items.append(Item(OSV_SEVERITY.get(v.severity.upper(), "Medio"), "cve",
-                              f"{v.cve} en {v.package.name} {v.package.version}", v.package.ecosystem, detail, fix))
-    out.resumen.append(f"**cve**: {len(servers)} servidor(es), {len(packages)} con versión fija consultados en "
-                       f"OSV.dev, {len(vulns)} vulnerabilidad(es).")
+                              t("{cve} en {pkg} {version}", cve=v.cve, pkg=v.package.name, version=v.package.version),
+                              v.package.ecosystem, detail, fix))
+    out.resumen.append(t("**cve**: {servers} servidor(es), {packages} con versión fija consultados en OSV.dev, "
+                         "{vulns} vulnerabilidad(es).", servers=len(servers), packages=len(packages), vulns=len(vulns)))
 
 
 def audit_trifecta(scopes: dict, out: Audit) -> None:
@@ -132,17 +144,20 @@ def audit_trifecta(scopes: dict, out: Audit) -> None:
             hits += 1
             parts = []
             for c in CAPS:
-                names = ", ".join(f"{n} ({by_name[n].caps[c].origen})" for n in r.aporta[c])
-                parts.append(f"{LABEL[c]}: {names}")
-            fix = "Quita una de estas opciones: " + " | ".join(", ".join(o) for o in r.quitar) + "."
+                names = ", ".join(f"{n} ({t(by_name[n].caps[c].origen)})" for n in r.aporta[c])
+                parts.append(f"{t(LABEL[c])}: {names}")
+            fix = t("Quita una de estas opciones: {options}.", options=" | ".join(", ".join(o) for o in r.quitar))
             if r.solo:
-                fix += f" {', '.join(r.solo)} junta las tres solo: limita sus tools (solo lectura, repos permitidos)."
-            out.items.append(Item("Alto", "trifecta", "Tríada letal", label, "; ".join(parts), fix))
+                fix += t(" {names} junta las tres solo: limita sus tools (solo lectura, repos permitidos).",
+                         names=", ".join(r.solo))
+            out.items.append(Item("Alto", "trifecta", t("Tríada letal"), t_scope(label), "; ".join(parts), fix))
         elif r.estado == "posible":
-            out.items.append(Item("Medio", "trifecta", "Posible tríada letal", label,
-                                  f"Falta «{LABEL[r.faltan[0]].lower()}»; sin clasificar: {', '.join(r.sin_clasificar)}",
-                                  "Revisa las tools de esos servidores (o pásalas con --tools) y vuelve a correr."))
-    out.resumen.append(f"**trifecta**: tríada letal en {hits} de {len(scopes)} alcance(s) (global y cada proyecto).")
+            out.items.append(Item("Medio", "trifecta", t("Posible tríada letal"), t_scope(label),
+                                  t("Falta «{missing}»; sin clasificar: {names}", missing=t(LABEL[r.faltan[0]]).lower(),
+                                    names=", ".join(r.sin_clasificar)),
+                                  t("Revisa las tools de esos servidores (o pásalas con --tools) y vuelve a correr.")))
+    out.resumen.append(t("**trifecta**: tríada letal en {hits} de {scopes} alcance(s) (global y cada proyecto).",
+                         hits=hits, scopes=len(scopes)))
 
 
 def build(skills: Path | None = None, config: Path | None = None, project: Path | None = None,
@@ -169,28 +184,28 @@ def overall(items: list[Item]) -> str:
 def render(audit: Audit, when: date | None = None, scope: str = "") -> str:
     when = when or date.today()
     counts = {s: sum(i.severidad == s for i in audit.items) for s in SEVERITIES}
-    lines = ["# Auditoría de seguridad de agentes (AgentGuard)", "", f"Fecha: {when.isoformat()}"]
+    lines = [t("# Auditoría de seguridad de agentes (AgentGuard)"), "", t("Fecha: {date}", date=when.isoformat())]
     if scope:
-        lines += ["", f"Alcance: {scope}"]
-    lines += ["", "## Resumen ejecutivo", "", f"**Riesgo general: {overall(audit.items)}.**", ""]
+        lines += ["", t("Alcance: {scope}", scope=scope)]
+    lines += ["", t("## Resumen ejecutivo"), "", t("**Riesgo general: {risk}.**", risk=t(overall(audit.items))), ""]
     lines += [f"- {r}" for r in audit.resumen]
-    lines += ["", "| severidad | hallazgos |", "|---|---|"] + [f"| {s} | {n} |" for s, n in counts.items()]
-    lines += ["", "## Hallazgos por severidad", ""]
+    lines += ["", t("| severidad | hallazgos |"), "|---|---|"] + [f"| {t(s)} | {n} |" for s, n in counts.items()]
+    lines += ["", t("## Hallazgos por severidad"), ""]
     n = 0
     for sev in SEVERITIES:
         items = [i for i in audit.items if i.severidad == sev]
         if not items:
             continue
-        lines += [f"### {sev} ({len(items)})", ""]
+        lines += [f"### {t(sev)} ({len(items)})", ""]
         for i in items:
             n += 1
             lines.append(f"**H-{n:02d} · {i.titulo}** — {i.origen} · {i.donde}")
             if i.detalle:
-                lines.append(f"- Detalle: {i.detalle}")
-            lines += [f"- Cómo arreglar: {i.arreglo}", ""]
+                lines.append(t("- Detalle: {detail}", detail=i.detalle))
+            lines += [t("- Cómo arreglar: {fix}", fix=i.arreglo), ""]
     if not n:
-        lines += ["Sin hallazgos.", ""]
-    lines += [
+        lines += [t("Sin hallazgos."), ""]
+    lines += [t(x) for x in [
         "## Revisión manual",
         "",
         "> Para completar por quien audita. Lo automático no reemplaza esta parte.",
@@ -212,13 +227,14 @@ def render(audit: Audit, when: date | None = None, scope: str = "") -> str:
         "lo heurístico hay que confirmarlo a mano.",
         "- `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.",
         "- No se ejecutó ningún servidor.",
-    ]
+    ]]
     return "\n".join(lines) + "\n"
 
 
 def cmd_audit(args: list[str], check_fn=check) -> int:
     opts = {}
     flags = {"--skills", "--config", "--proyecto", "--tools", "--out"}
+    args = ["--proyecto" if a == "--project" else "--sin-red" if a == "--offline" else a for a in args]
     i = 0
     while i < len(args):
         if args[i] in flags and i + 1 < len(args):
@@ -228,14 +244,17 @@ def cmd_audit(args: list[str], check_fn=check) -> int:
             check_fn = None
             i += 1
         else:
-            print(__doc__)
+            print(USAGE_EN if get_lang() == "en" else __doc__)
             return 2
     audit = build(opts.get("--skills"), opts.get("--config"), opts.get("--proyecto"), opts.get("--tools"), check_fn)
-    scope = ", ".join(f"{k[2:]} `{show(v)}`" for k, v in opts.items() if k != "--out") or "configs MCP instaladas"
+    names = {"--proyecto": "project"} if get_lang() == "en" else {}
+    scope = (", ".join(f"{names.get(k, k[2:])} `{show(v)}`" for k, v in opts.items() if k != "--out")
+             or t("configs MCP instaladas"))
     text = render(audit, scope=scope)
     if "--out" in opts:
         opts["--out"].write_text(text, encoding="utf-8")
-        print(f"Reporte guardado en {opts['--out']} ({len(audit.items)} hallazgo(s), riesgo {overall(audit.items)})")
+        print(t("Reporte guardado en {path} ({n} hallazgo(s), riesgo {risk})",
+                path=opts["--out"], n=len(audit.items), risk=t(overall(audit.items))))
     else:
         print(text)
     return 1 if any(i.severidad in ("Crítico", "Alto") for i in audit.items) else 0

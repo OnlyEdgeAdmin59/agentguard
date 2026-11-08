@@ -15,6 +15,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ..i18n import t, t_scope
 from ..cve.inventory import NPM, config_paths, first_positional, package_of, servers_in, strip_jsonc
 
 KNOWN = Path(__file__).resolve().parent / "known.json"
@@ -266,37 +267,44 @@ def analyze(group: list[Classified]) -> Result:
 
 def describe(server: Classified, cap: str) -> str:
     ev = server.caps[cap]
-    check = " — confirmar a mano" if ev.origen == "heurística" else ""
-    return f"{server.name} ({ev.origen}: {ev.motivo}{check})"
+    check = t(" — confirmar a mano") if ev.origen == "heurística" else ""
+    return f"{server.name} ({t(ev.origen)}: {t_motivo(ev.motivo)}{check})"
+
+
+def t_motivo(motivo: str) -> str:
+    """Traduce el motivo de la tabla o el de la heurística ('fetch (nombre); web (url)')."""
+    if t(motivo) != motivo:
+        return t(motivo)
+    return re.sub(r"\((nombre|comando|url|variables de entorno)\)", lambda m: f"({t(m.group(1))})", motivo)
 
 
 def report(client: str, group: list[Classified]) -> Result:
     result = analyze(group)
     by_name = {s.name: s for s in group}
-    print(f"\n== {client}: {len(group)} servidor(es)")
+    print(t("\n== {client}: {n} servidor(es)", client=t_scope(client), n=len(group)))
     if result.estado == "triada":
-        print("[ALTO] TRÍADA LETAL: esta configuración junta las tres capacidades.")
+        print(t("[ALTO] TRÍADA LETAL: esta configuración junta las tres capacidades."))
         for c in CAPS:
-            print(f"  - {LABEL[c]}: " + "; ".join(describe(by_name[n], c) for n in result.aporta[c]))
+            print(f"  - {t(LABEL[c])}: " + "; ".join(describe(by_name[n], c) for n in result.aporta[c]))
         for name in result.solo:
-            print(f"  ! {name} junta las tres por sí solo: quítalo o limita sus tools "
-                  "(solo lectura, repos o canales permitidos).")
-        print("Para romperla, quita una de estas opciones (lo que menos servidores toca):")
+            print(t("  ! {name} junta las tres por sí solo: quítalo o limita sus tools "
+                    "(solo lectura, repos o canales permitidos).", name=name))
+        print(t("Para romperla, quita una de estas opciones (lo que menos servidores toca):"))
         for option in result.quitar:
-            broken = [LABEL[c].lower() for c in CAPS if set(result.aporta[c]) <= set(option)]
-            print(f"  • {', '.join(option)}  → ya nadie {' / '.join(broken)}")
+            broken = [t(LABEL[c]).lower() for c in CAPS if set(result.aporta[c]) <= set(option)]
+            print(t("  • {option}  → ya nadie {broken}", option=", ".join(option), broken=" / ".join(broken)))
     elif result.estado == "posible":
-        missing = LABEL[result.faltan[0]].lower()
-        print(f"[MEDIO] POSIBLE TRÍADA: ya hay dos capacidades y falta «{missing}».")
-        print(f"  Sin clasificar (podrían aportarla): {', '.join(result.sin_clasificar)}. "
-              "Revísalos o pasa sus tools con --tools <carpeta>.")
+        missing = t(LABEL[result.faltan[0]]).lower()
+        print(t("[MEDIO] POSIBLE TRÍADA: ya hay dos capacidades y falta «{missing}».", missing=missing))
+        print(t("  Sin clasificar (podrían aportarla): {names}. Revísalos o pasa sus tools con --tools <carpeta>.",
+                names=", ".join(result.sin_clasificar)))
     else:
-        print(f"Sin tríada: falta {', '.join(LABEL[c].lower() for c in result.faltan)}.")
+        print(t("Sin tríada: falta {missing}.", missing=", ".join(t(LABEL[c]).lower() for c in result.faltan)))
         if result.sin_clasificar:
-            print(f"  [INFO] Sin clasificar: {', '.join(result.sin_clasificar)}")
+            print(t("  [INFO] Sin clasificar: {names}", names=", ".join(result.sin_clasificar)))
     for s in group:
-        found = ", ".join(f"{c} ({s.caps[c].origen})" for c in CAPS if c in s.caps)
-        print(f"  {s.name:<24} {found or ('ninguna' if s.clasificado else 'sin clasificar')}")
+        found = ", ".join(f"{t(c)} ({t(s.caps[c].origen)})" for c in CAPS if c in s.caps)
+        print(f"  {s.name:<24} {found or t('ninguna' if s.clasificado else 'sin clasificar')}")
     return result
 
 
@@ -313,7 +321,7 @@ def cmd_trifecta(args: list[str]) -> int:
     else:
         found = groups(target, tools_dir)
     if not any(found.values()):
-        print("No se encontraron servidores MCP en las configuraciones conocidas.")
+        print(t("No se encontraron servidores MCP en las configuraciones conocidas."))
         return 0
     results = [report(client, group) for client, group in found.items() if group]
     return 1 if any(r.estado == "triada" for r in results) else 0
