@@ -32,7 +32,12 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"\b(?:ignora|ignorar|ignore|olvida|olvidar|omite|descarta)\s+(?:todas?\s+|cualquier\s+)?(?:las\s+|tus\s+|sus\s+)?"
         r"(?:instrucciones|reglas|indicaciones|[óo]rdenes)\s+(?:anteriores|previas|de arriba|del sistema)"
         r"|\bignor[ae]\s+(?:todas\s+)?(?:as\s+)?(?:instru[çc][õo]es|regras)\s+anteriores"
-        r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)",
+        r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)"
+        # Más verbos y sustantivos en portugués y francés ("desconsidere as orientações recebidas antes").
+        r"|\b(?:desconsider[ae]|esque[çc]a|ignor[ae])\s+(?:todas\s+)?(?:as\s+)?(?:orienta[çc][õo]es|instru[çc][õo]es"
+        r"|regras|diretrizes)\s+(?:recebidas\s+)?(?:anteriores|antes|anteriormente|do\s+sistema|do\s+desenvolvedor)"
+        r"|\b(?:oublie[zr]?|ignore[zr]?)\s+(?:toutes\s+)?(?:les\s+)?(?:r[èe]gles|instructions|consignes|directives)\s+"
+        r"(?:fix[ée]es\s+par|pr[ée]c[ée]dentes|ant[ée]rieures|du\s+(?:d[ée]veloppeur|syst[èe]me))",
         re.I)),
     # Reformulaciones: otras palabras para anular reglas o cambiarle el papel al modelo.
     ("ALTO", RULE_OVERRIDE, re.compile(
