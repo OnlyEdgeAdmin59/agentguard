@@ -45,6 +45,12 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"|above|system|safety|existing)\s+(?:[\w-]+\s+){0,2}?(?:instructions?|rules|guidelines|guardrails|polic(?:y|ies)"
         r"|prompt|restrictions|directives)\b"
         r"|\byou are now (?:in |a |an )?[^.\n]{0,25}\b(?:mode|unrestricted|jailbroken|unfiltered)\b"
+        # Declarar vencidas las reglas que recibió el modelo, o que ya no lo atan.
+        r"|\b(?:instructions?|guidance|rules|guidelines|polic(?:y|ies)|directives|prompt)\b[^.\n]{0,15}"
+        r"\b(?:you(?:'ve| have)? (?:received|were given|got)|given to you)\b[^.\n]{0,25}"
+        r"\b(?:outdated|obsolete|superseded|revoked|void|no longer (?:valid|appl))"
+        r"|\bno longer (?:binds?|appl(?:y|ies) to|restricts?) you\b"
+        r"|\byou (?:now )?(?:operate|act) as an? (?:unrestricted|unfiltered|uncensored|jailbroken)\b"
         r"|\b(?:note|message) (?:to|for) the (?:ai|assistant|model|llm|agent)(?: model)?\s*:"  # "instructions for the AI" = docs
         r"|\b(?:salta(?:te|r)?|evita|desobedece|desactiva)\s+(?:todas?\s+)?(?:las\s+|tus\s+)?(?:reglas|restricciones"
         r"|instrucciones|pol[ií]ticas)\b(?:\s+de seguridad)?"
