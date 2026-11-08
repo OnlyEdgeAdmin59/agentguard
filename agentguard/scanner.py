@@ -95,7 +95,7 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("MEDIO", RULE_COMMENT, re.compile(r"<!--.*?-->", re.S)),
     ("MEDIO", RULE_B64, re.compile(r"[A-Za-z0-9+/]{120,}={0,2}")),
     ("ALTO", RULE_INVISIBLE,
-     re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff\U000e0000-\U000e007f]")),
+     re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff\U000e0000-\U000e007f]")),
     # Tool shadowing: la descripci\u00f3n de una tool cambia c\u00f3mo el agente usa OTRAS tools.
     ("ALTO", RULE_SHADOW, re.compile(
         r"\b(?:when(?:ever)?|each time|every time|any time)\b[^.\n]{0,50}?\b(?!(?:this|the|a|that|same|it)\b)"
@@ -216,7 +216,7 @@ CONFUSABLE_CHARS = "".join(chr(c) for c in CONFUSABLES)
 HOMOGLYPH_WORD = re.compile(rf"\b(?=\w*[A-Za-z])(?=\w*[{CONFUSABLE_CHARS}])\w+\b")
 TAG_CHARS = re.compile(r"[\U000e0020-\U000e007e]+")
 BIDI_OVERRIDE = re.compile(r"\u202e([^\u202c\n]*)\u202c?")
-INVISIBLE = re.compile(r"[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff\U000e0000-\U000e007f]")
+INVISIBLE = re.compile(r"[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\U000e0000-\U000e007f]")
 
 
 def normalize(text: str) -> str:
