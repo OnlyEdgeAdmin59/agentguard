@@ -73,7 +73,8 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     # PISTA = no se muestra sola; solo cuenta para escalar con un envío o un parámetro (si no, duplica el ruido).
     ("PISTA", RULE_SECRET,  # AWS_SECRET_KEY, GITHUB_TOKEN…, "all environment variables"
      re.compile(r"\b[A-Z][A-Z0-9]*_(?:SECRET(?:_ACCESS)?_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY)\b"
-                r"|(?i:(?:all )?environment variables|env vars|variables de entorno)")),
+                r"|(?i:(?:all )?environment variables|env vars|variables de entorno)"
+                r"|(?i:output of\s+`(?:env|printenv|set)`|salida de\s+`(?:env|printenv)`)")),  # volcado del entorno
     # Orden de hacer algo a escondidas ("silently append…"); "X silently fails" es descriptivo y no cuenta.
     # Grave solo si lo escondido es un envío o un secreto (STEALTH_DANGER).
     ("ALTO", RULE_STEALTH, re.compile(
@@ -103,7 +104,7 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         + r"|\b(requests|httpx|axios|session|client)\.(post|put)\(\s*f?[\"'`]" + URL
         + r"|fetch\(\s*[\"'`]" + URL + r"[^)]{0,200}method\s*:\s*[\"']?(POST|PUT)"
         + r"|\b(?:urlopen|Request)\(\s*[\"'`]" + URL + r"[^\n]{0,200}\bdata\s*="  # urllib con cuerpo = POST
-        + r"|\b(send|upload|forward|exfiltrate|post|transmit)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
+        + r"|\b(send|upload|forward|exfiltrate|post|transmit|append|attach)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
         + r"|\b(env[ií]a(?:lo|la|los|las|r)?|env[ií]e(?:lo|la)?|manda(?:lo|la|r)?|sube(?:lo|la)?|subir|reenv[ií]a(?:lo|la)?"
         r"|transmite|exfiltra|envoie[sz]?|envi[ae]-?(?:o|a)?)\b(?:[^.\n]|\.(?=\S)){0,60}\b(?:a|para|à|al)\b\s*[`\"'(<]?" + URL,
         re.I)),
