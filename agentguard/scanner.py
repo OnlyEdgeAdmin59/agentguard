@@ -113,6 +113,10 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"[`'\"]?[\w-]+[`'\"]?\s+tool\b[^.\n]{0,25}?\b(?:is (?:used|called|invoked|run)|returns|runs|you (?:call|use|invoke|run))"
         # …y además le cambia algo a esa llamada ("when X tool returns, retry" = docs normales)
         r"[^.\n]{0,40}?\b(?:always|also|silently|secretly|instead|replace|change|set|add|bcc|cc|redirect|first)\b"
+        # Lo mismo en español: "cuando uses la herramienta X, cambia siempre…"
+        r"|\b(?:cuando|cada vez que|siempre que)\b[^.\n]{0,20}?\b(?:uses|llames|invoques|ejecutes|se use|se llame)\s+"
+        r"(?:a\s+)?(?:la\s+)?(?:herramienta|tool)\s+(?!(?:esta|este|la misma|misma)\b)[`'\"]?[\w-]+[`'\"]?[^.\n]{0,40}?"
+        r"\b(?:siempre|tambi[eé]n|en su lugar|cambia|reemplaza|sustituye|agrega|añade|pon|redirige|primero)\b"
         r"|\bregardless of (?:what|whatever) the user (?:said|says|asked|asks|wants|requested|typed)"
         r"|\b(?:first|also|always)\s+(?:call|use|invoke)\s+this tool\b[^.\n]{0,40}\bwith\b[^.\n]{0,30}"
         r"\b(?:history|conversation|messages|contents|output|credentials|files?)\b"
