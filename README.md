@@ -79,12 +79,12 @@ Genera un reporte con resumen ejecutivo, hallazgos por severidad, cómo arreglar
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.3.1
+- uses: OnlyEdgeAdmin59/agentguard@v0.4.0
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
 Con `lang: en` la salida y las anotaciones salen en inglés:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.3.1
+- uses: OnlyEdgeAdmin59/agentguard@v0.4.0
   with:
     lang: en
 ```
