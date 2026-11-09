@@ -124,12 +124,12 @@ def report(benign: list[dict], malicious: list[dict], title: str = "Fase 0: medi
                   f"(avisa de cualquier cambio, no juzga si es malo). `scan` del texto nuevo solo da ALTO en "
                   f"{scan_hits}/{len(rug)}: si el usuario aprueba el cambio sin leerlo, el resto pasa."]
 
+    # Solo ids: los textos de ataque nunca se imprimen en un reporte (así un holdout sigue sin leerse).
     lines += ["", "## Falsos negativos (ataques que no dieron ALTO)", ""]
     misses = [r for r in malicious if not r["alerta"]]
     if misses:
-        lines += ["| id | tipo | texto | lo que sí vio |", "|---|---|---|---|"]
-        lines += [f"| {r['case']['id']} | {r['case']['tipo']} | {short(r['case']['texto'])} | {rules(r['medios'])} |"
-                  for r in misses]
+        lines += ["| id | tipo | lo que sí vio |", "|---|---|---|"]
+        lines += [f"| {r['case']['id']} | {r['case']['tipo']} | {rules(r['medios'])} |" for r in misses]
     else:
         lines.append("Ninguno.")
 

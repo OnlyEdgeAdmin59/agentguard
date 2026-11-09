@@ -67,7 +67,7 @@ class Markdown(unittest.TestCase):
     def test_secciones_y_orden(self):
         text = render(build(skills=SKILLS, config=CONFIG, check_fn=offline_check), date(2026, 11, 2))
         for section in ("## Resumen ejecutivo", "**Riesgo general: Alto.**", "## Hallazgos por severidad",
-                        "Cómo arreglar:", "## Revisión manual", "## Límites", "2 de 60 textos"):
+                        "Cómo arreglar:", "## Revisión manual", "## Límites", "2 de 34 ataques"):
             self.assertIn(section, text)
         self.assertLess(text.index("### Crítico"), text.index("### Alto"))
         self.assertLess(text.index("### Alto"), text.index("### Info"))

@@ -3,8 +3,8 @@
 ## Sin publicar
 
 ### Documentación
-- Nuevo set ciego independiente (holdout v3: Skill-Inject, MIT, más tools de modelcontextprotocol/servers como benignos). Resultado en `reports/holdout_v3.md` (por ataque distinto: 2 de 34). La frase de detección del README y de "Límites" en `audit` pasa a ser:
-  > En un set ciego independiente (Skill-Inject, MIT), `scan` marcó como ALTO 2 de 60 textos de ataque (3%) y con algún aviso 14 (23%), sin falsas alarmas ALTAS en 120 benignos. Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no haya hallazgos no prueba que algo sea seguro.
+- Nuevo set ciego independiente (holdout v3: Skill-Inject, MIT, más tools de modelcontextprotocol/servers como benignos). Resultado en `reports/holdout_v3.md` (2 de 34 ataques con ALTO). La frase de detección del README y de "Límites" en `audit` pasa a ser:
+  > En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO 2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no haya hallazgos no prueba que algo sea seguro.
 
 ## 0.4.0
 

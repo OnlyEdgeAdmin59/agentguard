@@ -173,14 +173,14 @@ EN: dict[str, str] = {
     "- [ ] Conclusión:": "- [ ] Conclusion:",
     "Auditor: ________ · Fecha: ________": "Auditor: ________ · Date: ________",
     "## Límites": "## Limitations",
-    "- `scan` usa reglas fijas. En un set ciego independiente (Skill-Inject, MIT), `scan` marcó como ALTO "
-    "2 de 60 textos de ataque (3%) y con algún aviso 14 (23%), sin falsas alarmas ALTAS en 120 benignos. "
-    "Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no "
-    "haya hallazgos no prueba que algo sea seguro.":
-        "- `scan` uses fixed rules. On an independent blind set (Skill-Inject, MIT), `scan` flagged 2 of 60 "
-        "attack texts as HIGH (3%) and 14 (23%) with some warning, with no HIGH false alarms on 120 benign "
-        "cases. Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` do not depend on those rules. "
-        "No findings does not prove something is safe.",
+    "- En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO "
+    "2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con "
+    "aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas "
+    "reglas. Que no haya hallazgos no prueba que algo sea seguro.":
+        "- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), `scan` rated 2 of 34 "
+        "attacks HIGH (6%) and flagged 12 at some level (35%), with no HIGH false alarms on 120 benign "
+        "samples (5 with a MEDIUM notice). Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` "
+        "don't depend on those rules. No findings does not prove something is safe.",
     "- `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; "
     "lo heurístico hay que confirmarlo a mano.":
         "- `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; "

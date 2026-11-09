@@ -79,7 +79,7 @@ Auditor: ________ · Date: ________
 
 ## Limitations
 
-- `scan` uses fixed rules. On an independent blind set (Skill-Inject, MIT), `scan` flagged 2 of 60 attack texts as HIGH (3%) and 14 (23%) with some warning, with no HIGH false alarms on 120 benign cases. Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` do not depend on those rules. No findings does not prove something is safe.
+- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), `scan` rated 2 of 34 attacks HIGH (6%) and flagged 12 at some level (35%), with no HIGH false alarms on 120 benign samples (5 with a MEDIUM notice). Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` don't depend on those rules. No findings does not prove something is safe.
 - `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; heuristic results must be confirmed manually.
 - `cve` only finds vulnerabilities published on OSV.dev for packages with a pinned version.
 - No server was executed.
