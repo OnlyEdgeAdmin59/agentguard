@@ -108,13 +108,14 @@ Ninguno.
 
 ## Conclusión (medido una sola vez, sin cambiar reglas)
 
-- **`scan` detectó 2 de 60 ataques (3%)**. Los dos son por "secreto + envío externo". Otros 12 dieron solo avisos MEDIO (10 de envío a URL externa, 2 de secretos), que no hacen fallar el CI. Los 46 restantes no dieron ningún aviso.
+- **Por ataque distinto (la cifra que vale): 2 de 34 detectados (6%).** 10 más dieron solo avisos MEDIO y 22 no dieron ningún aviso. Un ataque cuenta como detectado si alguna de sus redacciones dio ALTO.
+- **Por texto: 2 de 60 (3%).** Los dos son por "secreto + envío externo". Otros 12 dieron solo avisos MEDIO (10 de envío a URL externa, 2 de secretos), que no hacen fallar el CI. Los 46 restantes no dieron ningún aviso. Son 60 textos y no 68 porque 8 de los 34 ataques traen una sola redacción (el otro campo viene vacío en la fuente); 26 traen dos.
 - **Falsas alarmas: 0 de 120 benignos con ALTO.** 5 benignos dieron avisos MEDIO.
 - Esto confirma lo que ya sugería el holdout v2 (5/263): el 22/23 del holdout v1 refleja el ajuste, no la detección real. Fuera de los casos con que se ajustaron, las reglas detectan muy poco.
 - Por qué, según el paper (no leí los textos maliciosos): estas inyecciones están escritas como pasos normales de una skill (hacer un backup, subir un archivo, mandar un mail) y no usan las frases típicas que buscan las reglas ("ignore previous instructions", "silently", "don't tell the user"). Para distinguirlas hace falta entender la intención, y reglas fijas de texto no pueden.
 - Límites de este set:
-  - Son 34 ataques. La mayoría viene en 2 redacciones parecidas, así que las 60 muestras no son independientes.
-  - Todos son SKILL.md. No hay tool poisoning en descripciones MCP: MCPTox es la fuente que lo cubre y no tiene licencia.
-  - Cada inyección va sola, sin la skill que la rodea en el paper. Eso las hace *más fáciles* de ver, y aun así casi no se detectan.
+  - **(a) Los ataques van aislados**, sin la skill que los rodea en el paper. Eso los hace *más fáciles* de detectar que en el paper (no hay texto legítimo alrededor que los diluya), y aun así casi no se detectan. Dentro de una skill real la cifra sería igual o peor.
+  - **(b) Este set mide inyección en SKILL.md, no tool poisoning en descripciones MCP.** Los textos MCP del set son solo benignos (miden falsas alarmas). Para tool poisoning haría falta otra fuente; MCPTox lo cubre pero no tiene licencia.
+  - Son 34 ataques. La mayoría viene en 2 redacciones parecidas, así que los 60 textos no son independientes; por eso la cifra principal es por ataque.
   - Los benignos son pocos (120), y los SKILL.md vienen del mismo benchmark.
 - No se cambió ninguna regla después de medir.
