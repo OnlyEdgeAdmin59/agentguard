@@ -1,0 +1,8 @@
+{
+  "id": "v3-benign-075",
+  "tipo": "tool_mcp_real",
+  "formato": "mcp",
+  "texto": "Returns its region argument and the Mcp-Param-Region HTTP header it arrived in. Demonstrates x-mcp-header (a 2026-07-28 Streamable HTTP client mirrors the argument into the header) and JSON Schema 2020-12 input and output schemas.",
+  "resultado_esperado": "limpio",
+  "fuente": "modelcontextprotocol/servers@3638028:src/everything/tools/get-header-params.ts"
+}
