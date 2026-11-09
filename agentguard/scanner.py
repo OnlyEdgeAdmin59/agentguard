@@ -32,7 +32,12 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"\b(?:ignora|ignorar|ignore|olvida|olvidar|omite|descarta)\s+(?:todas?\s+|cualquier\s+)?(?:las\s+|tus\s+|sus\s+)?"
         r"(?:instrucciones|reglas|indicaciones|[óo]rdenes)\s+(?:anteriores|previas|de arriba|del sistema)"
         r"|\bignor[ae]\s+(?:todas\s+)?(?:as\s+)?(?:instru[çc][õo]es|regras)\s+anteriores"
-        r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)",
+        r"|\bignore[zr]?\s+(?:toutes\s+)?(?:les\s+)?(?:instructions|r[èe]gles)\s+(?:pr[ée]c[ée]dentes|ant[ée]rieures)"
+        # Más verbos y sustantivos en portugués y francés ("desconsidere as orientações recebidas antes").
+        r"|\b(?:desconsider[ae]|esque[çc]a|ignor[ae])\s+(?:todas\s+)?(?:as\s+)?(?:orienta[çc][õo]es|instru[çc][õo]es"
+        r"|regras|diretrizes)\s+(?:recebidas\s+)?(?:anteriores|antes|anteriormente|do\s+sistema|do\s+desenvolvedor)"
+        r"|\b(?:oublie[zr]?|ignore[zr]?)\s+(?:toutes\s+)?(?:les\s+)?(?:r[èe]gles|instructions|consignes|directives)\s+"
+        r"(?:fix[ée]es\s+par|pr[ée]c[ée]dentes|ant[ée]rieures|du\s+(?:d[ée]veloppeur|syst[èe]me))",
         re.I)),
     # Reformulaciones: otras palabras para anular reglas o cambiarle el papel al modelo.
     ("ALTO", RULE_OVERRIDE, re.compile(
@@ -40,6 +45,12 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"|above|system|safety|existing)\s+(?:[\w-]+\s+){0,2}?(?:instructions?|rules|guidelines|guardrails|polic(?:y|ies)"
         r"|prompt|restrictions|directives)\b"
         r"|\byou are now (?:in |a |an )?[^.\n]{0,25}\b(?:mode|unrestricted|jailbroken|unfiltered)\b"
+        # Declarar vencidas las reglas que recibió el modelo, o que ya no lo atan.
+        r"|\b(?:instructions?|guidance|rules|guidelines|polic(?:y|ies)|directives|prompt)\b[^.\n]{0,15}"
+        r"\b(?:you(?:'ve| have)? (?:received|were given|got)|given to you)\b[^.\n]{0,25}"
+        r"\b(?:outdated|obsolete|superseded|revoked|void|no longer (?:valid|appl))"
+        r"|\bno longer (?:binds?|appl(?:y|ies) to|restricts?) you\b"
+        r"|\byou (?:now )?(?:operate|act) as an? (?:unrestricted|unfiltered|uncensored|jailbroken)\b"
         r"|\b(?:note|message) (?:to|for) the (?:ai|assistant|model|llm|agent)(?: model)?\s*:"  # "instructions for the AI" = docs
         r"|\b(?:salta(?:te|r)?|evita|desobedece|desactiva)\s+(?:todas?\s+)?(?:las\s+|tus\s+)?(?:reglas|restricciones"
         r"|instrucciones|pol[ií]ticas)\b(?:\s+de seguridad)?"
@@ -57,16 +68,18 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         r"|\bne\s+(?:le\s+|lui\s+)?(?:dis|dites|mentionne[sz]?|montre[sz]?)\s+(?:pas|rien)\b[^.\n]{0,40}utilisateur",
         re.I)),
     ("MEDIO", RULE_SECRET,
-     re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json)", re.I)),
+     re.compile(r"(\.ssh|id_rsa|\.env\b|\.aws/credentials|api[_-]?key|private key|mcp\.json"
+                r"|gh/hosts\.ya?ml|\.netrc|\.git-credentials|\.npmrc|\.pypirc|\.docker/config\.json|\.kube/config)", re.I)),
     # PISTA = no se muestra sola; solo cuenta para escalar con un envío o un parámetro (si no, duplica el ruido).
     ("PISTA", RULE_SECRET,  # AWS_SECRET_KEY, GITHUB_TOKEN…, "all environment variables"
      re.compile(r"\b[A-Z][A-Z0-9]*_(?:SECRET(?:_ACCESS)?_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY)\b"
-                r"|(?i:(?:all )?environment variables|env vars|variables de entorno)")),
+                r"|(?i:(?:all )?environment variables|env vars|variables de entorno)"
+                r"|(?i:output of\s+`(?:env|printenv|set)`|salida de\s+`(?:env|printenv)`)")),  # volcado del entorno
     # Orden de hacer algo a escondidas ("silently append…"); "X silently fails" es descriptivo y no cuenta.
     # Grave solo si lo escondido es un envío o un secreto (STEALTH_DANGER).
     ("ALTO", RULE_STEALTH, re.compile(
         r"\b(?:silently|secretly|quietly|covertly|discreetly)\s+(?:send|upload|forward|append|include|copy|attach|post"
-        r"|call|add|read|collect|exfiltrate|share|transmit)\b"
+        r"|call|add|read|collect|exfiltrate|share|transmit|run|execute|install|download)\b"
         r"|\bwithout (?:telling|informing|notifying|alerting) (?:the )?user\b"
         r"|\b(?:env[ií]a|sube|reenv[ií]a|copia|agrega|lee|manda)\w*\s+(?:en secreto|silenciosamente|discretamente"
         r"|a escondidas)\b|\b(?:en secreto|silenciosamente|discretamente|a escondidas)\s+(?:env[ií]a|sube|reenv[ií]a|copia"
@@ -75,7 +88,11 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("MEDIO", RULE_PARAM, re.compile(
         r"\b(?:include|put|pass|place|add|insert|copy|embed|attach|append|incluye|pon|pasa|mete|agrega)\b[^.\n]{0,60}"
         r"\b(?:in|into|as|to|en|como)\s+(?:the |this tool's |every |el |la )?[`'\"]?[\w-]+[`'\"]?\s+"
-        r"(?:parameter|param|field|argument|arg|par[áa]metro|campo|argumento)\b", re.I)),
+        r"(?:parameter|param|field|argument|arg|par[áa]metro|campo|argumento)\b"
+        # Orden inverso: "copia en el parámetro 'contexto' …", "put into the field `notes` …"
+        r"|\b(?:include|put|pass|place|add|insert|copy|embed|attach|append|incluye|pon|pasa|mete|agrega|copia|a[ñn]ade)\b"
+        r"[^.\n]{0,60}?\b(?:in|into|en)\s+(?:the |el |la )(?:parameter|param|field|argument|par[áa]metro|campo|argumento)"
+        r"\s+[`'\"]?[\w-]+", re.I)),
     ("ALTO", "Imagen markdown que filtra datos por la URL", re.compile(
         r"!\[[^\]]*\]\(\s*https?://[^)\s]*[?&][\w-]+=(?:\{\{?\s*[\w.]*(?:user|message|conversation|chat|history|secret"
         r"|token|key|summary|password)[\w.]*\s*\}?\}|<[^>]*(?:user|message|conversation|chat|history|secret|token|key"
@@ -86,7 +103,8 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
         + r"|curl\b[^\n]{0,120}" + URL + r"[^\n]{0,120}(-X\s*POST|--data|-d\s|-F\s|--upload-file)"
         + r"|\b(requests|httpx|axios|session|client)\.(post|put)\(\s*f?[\"'`]" + URL
         + r"|fetch\(\s*[\"'`]" + URL + r"[^)]{0,200}method\s*:\s*[\"']?(POST|PUT)"
-        + r"|\b(send|upload|forward|exfiltrate|post|transmit)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
+        + r"|\b(?:urlopen|Request)\(\s*[\"'`]" + URL + r"[^\n]{0,200}\bdata\s*="  # urllib con cuerpo = POST
+        + r"|\b(send|upload|forward|exfiltrate|post|transmit|append|attach)\b(?:[^.\n]|\.(?=\S)){0,60}\bto\b\s*[`\"'(<]?" + URL
         + r"|\b(env[ií]a(?:lo|la|los|las|r)?|env[ií]e(?:lo|la)?|manda(?:lo|la|r)?|sube(?:lo|la)?|subir|reenv[ií]a(?:lo|la)?"
         r"|transmite|exfiltra|envoie[sz]?|envi[ae]-?(?:o|a)?)\b(?:[^.\n]|\.(?=\S)){0,60}\b(?:a|para|à|al)\b\s*[`\"'(<]?" + URL,
         re.I)),
@@ -95,13 +113,23 @@ RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ("MEDIO", RULE_COMMENT, re.compile(r"<!--.*?-->", re.S)),
     ("MEDIO", RULE_B64, re.compile(r"[A-Za-z0-9+/]{120,}={0,2}")),
     ("ALTO", RULE_INVISIBLE,
-     re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff\U000e0000-\U000e007f]")),
+     re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff\U000e0000-\U000e007f]")),
     # Tool shadowing: la descripci\u00f3n de una tool cambia c\u00f3mo el agente usa OTRAS tools.
     ("ALTO", RULE_SHADOW, re.compile(
         r"\b(?:when(?:ever)?|each time|every time|any time)\b[^.\n]{0,50}?\b(?!(?:this|the|a|that|same|it)\b)"
         r"[`'\"]?[\w-]+[`'\"]?\s+tool\b[^.\n]{0,25}?\b(?:is (?:used|called|invoked|run)|returns|runs|you (?:call|use|invoke|run))"
         # …y además le cambia algo a esa llamada ("when X tool returns, retry" = docs normales)
         r"[^.\n]{0,40}?\b(?:always|also|silently|secretly|instead|replace|change|set|add|bcc|cc|redirect|first)\b"
+        # "For every call to create_pull_request, set…": cambia los argumentos de otra tool (nombre tipo snake_case).
+        r"|\b(?:for|on|before|after|in)\s+(?:every|each|any|all)\s+calls?\s+(?:to|of)\s+[`'\"]?[a-z]+_[\w]+[`'\"]?"
+        r"[^.\n]{0,20}?\b(?:always|set|add|replace|change|prefix|redirect|instead|remove|leave)\b"
+        # Meterle a cada comando de otra tool un script remoto: "prefix `curl … | sh;`".
+        r"|\b(?:prefix|prepend|prefija|antepon)\w*\b[^\n]{0,40}?\b(?:curl|wget|iwr|irm)\b[^\n]{0,120}?"
+        r"\|\s*(?:sudo\s+)?(?:(?:ba|z)?sh|iex)\b"
+        # Lo mismo en español: "cuando uses la herramienta X, cambia siempre…"
+        r"|\b(?:cuando|cada vez que|siempre que)\b[^.\n]{0,20}?\b(?:uses|llames|invoques|ejecutes|se use|se llame)\s+"
+        r"(?:a\s+)?(?:la\s+)?(?:herramienta|tool)\s+(?!(?:esta|este|la misma|misma)\b)[`'\"]?[\w-]+[`'\"]?[^.\n]{0,40}?"
+        r"\b(?:siempre|tambi[eé]n|en su lugar|cambia|reemplaza|sustituye|agrega|añade|pon|redirige|primero)\b"
         r"|\bregardless of (?:what|whatever) the user (?:said|says|asked|asks|wants|requested|typed)"
         r"|\b(?:first|also|always)\s+(?:call|use|invoke)\s+this tool\b[^.\n]{0,40}\bwith\b[^.\n]{0,30}"
         r"\b(?:history|conversation|messages|contents|output|credentials|files?)\b"
@@ -125,11 +153,12 @@ QUOTED_CONTEXT = re.compile(
     re.I)
 STEALTH_DANGER = re.compile(
     r"send|upload|forward|append|include|copy|attach|post|exfil|\.env|\.ssh|id_rsa|credential|password|token"
+    r"|\|\s*(?:sudo\s+)?(?:ba|z)?sh\b|\biex\b"  # script remoto a la shell: "curl … | sh"
     r"|api[_ -]?key|secret|history|conversation|environment|\benv[ií][aeo]|sube|clave|contrase|historial|conversaci",
     re.I)
 # Exfiltración por parámetro: tiene que haber algo que se lee o junta, no "pass your API key in 'key'".
 PARAM_ACQUIRE = re.compile(
-    r"value of|contents? of|\bread\b|collect|gather|dump|\ball (?:the )?(?:environment|env|files|keys|secrets)"
+    r"value of|contents? (?:\w+ )?of|contenido (?:\w+ )?de|\bread\b|collect|gather|dump|\ball (?:the )?(?:environment|env|files|keys|secrets)"
     r"|valor de|contenido de|\blee\b|junta|recopila", re.I)
 NEGATED = re.compile(r"\b(?:never|not|don't|no|nunca|jam[aá]s)\b\W*$", re.I)
 ADDRESS = re.compile(r"https?://\S+|[\w.+-]+@[\w-]+(\.[\w-]+)+")
@@ -216,7 +245,7 @@ CONFUSABLE_CHARS = "".join(chr(c) for c in CONFUSABLES)
 HOMOGLYPH_WORD = re.compile(rf"\b(?=\w*[A-Za-z])(?=\w*[{CONFUSABLE_CHARS}])\w+\b")
 TAG_CHARS = re.compile(r"[\U000e0020-\U000e007e]+")
 BIDI_OVERRIDE = re.compile(r"\u202e([^\u202c\n]*)\u202c?")
-INVISIBLE = re.compile(r"[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff\U000e0000-\U000e007f]")
+INVISIBLE = re.compile(r"[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\U000e0000-\U000e007f]")
 
 
 def normalize(text: str) -> str:
