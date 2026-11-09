@@ -173,11 +173,13 @@ EN: dict[str, str] = {
     "- [ ] Conclusión:": "- [ ] Conclusion:",
     "Auditor: ________ · Fecha: ________": "Auditor: ________ · Date: ________",
     "## Límites": "## Limitations",
-    "- `scan` usa reglas fijas. Antes de ajustar, detectó 10 de 23 ataques (43%) en un set ciego. Las reglas "
-    "se ajustaron después sobre ese set, así que ya no cuenta como ciego; hay un benchmark independiente en curso. "
-    "Que no haya hallazgos no prueba que algo sea seguro.":
-        "- `scan` uses fixed rules. Before tuning, it caught 10 of 23 attacks (43%) on a blind set. The rules were "
-        "tuned on that set afterwards, so it no longer counts as blind; an independent benchmark is in progress. "
+    "- `scan` usa reglas fijas. En un set ciego independiente (Skill-Inject, MIT), `scan` marcó como ALTO "
+    "2 de 60 textos de ataque (3%) y con algún aviso 14 (23%), sin falsas alarmas ALTAS en 120 benignos. "
+    "Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no "
+    "haya hallazgos no prueba que algo sea seguro.":
+        "- `scan` uses fixed rules. On an independent blind set (Skill-Inject, MIT), `scan` flagged 2 of 60 "
+        "attack texts as HIGH (3%) and 14 (23%) with some warning, with no HIGH false alarms on 120 benign "
+        "cases. Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` do not depend on those rules. "
         "No findings does not prove something is safe.",
     "- `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; "
     "lo heurístico hay que confirmarlo a mano.":

@@ -8,7 +8,7 @@ Seguridad para agentes de IA que usan skills y servidores MCP. Funciona en tu m�
 - `trifecta`: avisa si tu configuración junta la "tríada letal" (datos privados + contenido no confiable + salida hacia afuera).
 - `audit`: junta todo en un reporte de auditoría en Markdown.
 
-**No detecta todo.** Antes de ajustar, `scan` detectó 10 de 23 ataques (43%) en un set ciego. Las reglas se ajustaron después sobre ese set, así que ya no cuenta como ciego; hay un benchmark independiente en curso. Que no haya hallazgos no prueba que algo sea seguro. Ver [CHANGELOG.md](CHANGELOG.md).
+**No detecta todo.** En un set ciego independiente (Skill-Inject, MIT), `scan` marcó como ALTO 2 de 60 textos de ataque (3%) y con algún aviso 14 (23%), sin falsas alarmas ALTAS en 120 benignos. Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no haya hallazgos no prueba que algo sea seguro. Ver [CHANGELOG.md](CHANGELOG.md).
 
 ## Instalación
 ```bash
