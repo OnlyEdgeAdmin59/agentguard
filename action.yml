@@ -15,6 +15,12 @@ inputs:
   lang:
     description: "Idioma de la salida: es o en"
     default: "es"
+  deep:
+    description: "Juicio semántico con un modelo de IA (true/false). Envía el contenido revisado a Anthropic; necesita ANTHROPIC_API_KEY en el env del paso"
+    default: "false"
+  deep-fail-on:
+    description: "Con deep: 'high' hace fallar el job si el juez marca ALTO. Vacío = solo avisa"
+    default: ""
 
 runs:
   using: "composite"
@@ -26,9 +32,22 @@ runs:
         AG_PATH: ${{ inputs.path }}
         AG_VERIFY: ${{ inputs.verify }}
         AGENTGUARD_LANG: ${{ inputs.lang }}
+        AG_DEEP: ${{ inputs.deep }}
+        AG_DEEP_FAIL: ${{ inputs.deep-fail-on }}
       run: |
         set +e
-        python3 "$GITHUB_ACTION_PATH/agentguard.py" scan "$AG_PATH" | tee /tmp/ag_scan.txt
+        deep_args=()
+        if [ "$AG_DEEP" = "true" ]; then
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            # p. ej. PRs desde forks: no hay secretos. Se salta --deep sin fallar.
+            echo "::notice title=agentguard::deep omitido: no hay ANTHROPIC_API_KEY"
+          else
+            python3 -m pip install --quiet --disable-pip-version-check "anthropic>=0.116"
+            deep_args=(--deep --deep-yes)
+            if [ -n "$AG_DEEP_FAIL" ]; then deep_args+=(--deep-fail-on "$AG_DEEP_FAIL"); fi
+          fi
+        fi
+        python3 "$GITHUB_ACTION_PATH/agentguard.py" scan "$AG_PATH" "${deep_args[@]}" | tee /tmp/ag_scan.txt
         scan=${PIPESTATUS[0]}
         verify=0
         if [ "$AG_VERIFY" = "true" ] && [ -f "$AG_PATH/agentguard.lock.json" ]; then

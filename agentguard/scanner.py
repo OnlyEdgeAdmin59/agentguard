@@ -178,6 +178,7 @@ class Finding:
     line: int
     snippet: str
     context: str = ""  # línea completa, para reglas que necesitan ver más que el fragmento
+    reason: str = ""  # motivo en palabras (solo lo usa --deep)
 
 
 def line_at(text: str, pos: int) -> str:

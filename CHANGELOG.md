@@ -2,6 +2,14 @@
 
 ## Sin publicar
 
+### Nuevo (en prueba)
+- **`scan --deep` y `audit --deep`**: juicio semántico opcional con un modelo de IA que solo suma hallazgos (regla `Juicio semántico (deep)`, con motivo y fragmento). Anthropic por defecto (`claude-haiku-5-5`, extra `pip install agentguard-scan[deep]`) u Ollama local (`--deep-provider ollama --deep-model …`).
+  - Privacidad: nunca se activa solo; avisa qué se envía y a dónde, pide confirmación (`--deep-yes` en CI), tapa claves antes de enviar y `--deep-dry-run` no envía nada.
+  - Defensa contra inyección al juez: delimitadores con nonce, sin herramientas, JSON estricto validado localmente, el fragmento citado tiene que existir en el texto, y sin veredicto nunca cuenta como limpio.
+  - No hace fallar el CI salvo con `--deep-fail-on high`. GitHub Action: inputs `deep` y `deep-fail-on`.
+  - `scripts/medir_deep.py`: mide reglas, deep y combinado, con conteo de costos (`reports/deep_costos.md`) y protección del holdout v3 (una sola medición).
+  - Sin cifra de detección todavía: falta ajustar el prompt y medir el set ciego.
+
 ### Documentación
 - Nuevo set ciego independiente (holdout v3: Skill-Inject, MIT, más tools de modelcontextprotocol/servers como benignos). Resultado en `reports/holdout_v3.md` (2 de 34 ataques con ALTO). La frase de detección del README y de "Límites" en `audit` pasa a ser:
   > En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO 2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no haya hallazgos no prueba que algo sea seguro.

@@ -19,6 +19,10 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+# scan --deep con Anthropic (opcional). Con Ollama no hace falta nada.
+deep = ["anthropic>=0.116"]
+
 [project.urls]
 Homepage = "https://github.com/OnlyEdgeAdmin59/agentguard"
 Issues = "https://github.com/OnlyEdgeAdmin59/agentguard/issues"
