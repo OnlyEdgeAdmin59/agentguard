@@ -1,6 +1,6 @@
 # Plan: `scan --deep` (chequeo semántico opcional)
 
-Estado: **borrador para aprobar. No hay código todavía.**
+Estado: **aprobado con decisiones (ver al final). En implementación.**
 
 ## Por qué
 
@@ -25,7 +25,7 @@ Las reglas fijas de `scan` detectan frases conocidas. En el set ciego Skill-Inje
 - La recomendación es **provisional** y se confirma en la evaluación (punto 5).
 - Si un modelo local queda cerca en los sets de ajuste, conviene que Ollama pase a ser el default, porque es más privado.
 
-**Modelo por defecto en Anthropic:** `claude-opus-5-5`, con esfuerzo `low` (clasificar no necesita más). Se cambia con `--deep-model`. Elegir un modelo más barato es decisión tuya; abajo está el costo de cada uno.
+**Modelo por defecto en Anthropic:** `claude-haiku-5-5`, con esfuerzo `low` (clasificar no necesita más). Se cambia con `--deep-model`. La evaluación compara Haiku con `claude-sonnet-5-5`; si Sonnet detecta claramente más, se documenta como opción.
 
 ### Costo aproximado por skill
 
@@ -35,9 +35,9 @@ Supuestos:
 
 | modelo | precio entrada / salida (por 1M tokens) | por skill | 100 skills |
 |---|---|---|---|
-| `claude-opus-5-5` (default) | $4 / $20 | ~$0,027 | ~$2,70 |
+| `claude-haiku-5-5` (default) | $0,10 / $0,50 | ~$0,0007 | ~$0,07 |
 | `claude-sonnet-5-5` | $2 / $10 | ~$0,014 | ~$1,40 |
-| `claude-haiku-5-5` | $0,10 / $0,50 | ~$0,0007 | ~$0,07 |
+| `claude-opus-5-5` | $4 / $20 | ~$0,027 | ~$2,70 |
 | Ollama | — | $0 | $0 |
 
 - Una descripción de tool MCP es mucho más corta (~200 tokens), así que cuesta alrededor de un tercio de una skill.
@@ -93,7 +93,7 @@ Cada veredicto del juez se convierte en un `Finding` con el formato actual:
 - **Motivo:**
   - Se agrega un campo opcional `reason` a `Finding`, vacío por defecto, así que las reglas no cambian.
   - El juez escribe el motivo en el idioma de `--lang`: se le pide `es` o `en`, sin traducir después.
-- **Código de salida:** un ALTO de `--deep` cuenta igual que uno de las reglas (sale con 1). Las anotaciones de GitHub usan `annotate()` igual que hoy.
+- **Código de salida:** los hallazgos de `--deep` **no** hacen fallar el CI por defecto. Solo con `--deep-fail-on high` un ALTO de `--deep` sale con 1. Las anotaciones de GitHub usan `annotate()` igual que hoy.
 - **No es determinista.** Los modelos actuales no aceptan `temperature`, así que dos corridas pueden diferir. El README lo dice, y para CI se recomienda `--deep` como aviso más que como bloqueo.
 - **`audit --deep`:**
   - Agrega los hallazgos con origen `deep` a la tabla.
@@ -121,7 +121,7 @@ Reglas del proceso:
   - Proveedor, modelo, esfuerzo y fecha.
   - Costo real de la corrida.
 - **Variabilidad:** el holdout v3 se mide una sola vez, como siempre. En los sets de ajuste se corre 3 veces y se informa el rango, porque el modelo no es determinista.
-- **Costo de evaluar:** una corrida completa (~955 textos, la mayoría cortos) cuesta ~$5–10 con `claude-opus-5-5` y es gratis con Ollama. **Antes de empezar el bucle te pido OK con un presupuesto.**
+- **Costo de evaluar:** una corrida completa (~955 textos, la mayoría cortos) cuesta centavos con Haiku y ~$2–4 con Sonnet. **Tope total: $15** para ajuste más comparación Haiku/Sonnet. El costo real (tokens de `usage`) se acumula en `reports/deep_costos.md`; si se acerca al tope, me detengo.
 - **Después:** con el holdout v3 usado, para afirmar cifras nuevas hará falta otro set ciego.
 
 ## 6. Tests sin red
@@ -147,8 +147,7 @@ Reglas del proceso:
   - Ejemplo de la Action con `deep: true` y la advertencia sobre el contenido del PR.
 - **Reporte de `audit` ("Límites" e `i18n.py`):** una línea con la cifra medida de `--deep`, qué proveedor y modelo se usó, y que se envió texto a un tercero, si fue así.
 - **CHANGELOG:** entrada nueva con la opción, los proveedores y las cifras medidas.
-- **SKILL.md de Agensi:**
-  - **No está en este repo**, así que necesito el archivo o el link para editarlo.
+- **SKILL.md de Agensi** (`agensi/SKILL.md`, lo copia el usuario):
   - Cambios propuestos: mencionar `--deep` como opción, aclarar que necesita una clave de Anthropic o un Ollama local, y que con Anthropic el contenido sale de la máquina.
   - Recomendar `--deep-dry-run` antes de la primera corrida.
 
@@ -158,10 +157,10 @@ Reglas del proceso:
 - Otros proveedores (OpenAI, etc.).
 - Cachear veredictos por hash del archivo. Sería útil junto a `lock`, pero agrega estado.
 
-## Decisiones que necesito de ti
+## Decisiones tomadas
 
-1. Proveedor por defecto: Anthropic (recomendado, provisional) u Ollama.
-2. Modelo por defecto en Anthropic: `claude-opus-5-5` u otro más barato.
-3. ¿Un ALTO de `--deep` hace fallar el CI (código 1), o solo avisa?
-4. Presupuesto para el bucle de ajuste del prompt.
-5. El archivo SKILL.md de Agensi.
+1. Proveedor: Anthropic por defecto con `--deep`, Ollama como opción (`--deep-provider ollama`). Revisable tras la evaluación.
+2. Modelo: `claude-haiku-5-5` por defecto. La evaluación compara Haiku con Sonnet 5.5; si Sonnet detecta claramente más, se ofrece con `--deep-model`.
+3. CI: `--deep` no hace fallar el CI por defecto; solo con `--deep-fail-on high`.
+4. Presupuesto de ajuste: tope de $15 en total, con la cuenta en el reporte.
+5. SKILL.md de Agensi: el usuario lo copia a `agensi/SKILL.md`.
