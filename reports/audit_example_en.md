@@ -79,7 +79,7 @@ Auditor: ________ · Date: ________
 
 ## Limitations
 
-- `scan` uses fixed rules: on a blind validation set it caught 10 of 23 attacks (43%) with 1 false positive out of 23. No findings does not prove something is safe.
+- `scan` uses fixed rules. Before tuning, it caught 10 of 23 attacks (43%) on a blind set. The rules were tuned on that set afterwards, so it no longer counts as blind; an independent benchmark is in progress. No findings does not prove something is safe.
 - `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; heuristic results must be confirmed manually.
 - `cve` only finds vulnerabilities published on OSV.dev for packages with a pinned version.
 - No server was executed.

@@ -1,5 +1,17 @@
 # Cambios
 
+## 0.4.0
+
+### Cambiado
+- **Reglas de `scan` ampliadas** (sin reglas con nombre nuevo):
+  - Aislantes bidi (U+2066–2069) cuentan como caracteres invisibles.
+  - Anular instrucciones: más verbos en portugués y francés, y frases como "the guidance you received is outdated" o "no longer binds you".
+  - Tool shadowing: variante en español ("cuando uses la herramienta X…"), "for every call to `tool_name`, set…" y anteponer `curl … | sh` a los comandos.
+  - Hacer algo a escondidas: incluye run/execute/install/download; `| sh` cuenta como peligro.
+  - Exfiltración: parámetro con el nombre después ("en el parámetro 'x'"), más archivos de credenciales (gh/hosts.yml, .netrc, .npmrc, .pypirc, .docker/config.json, .kube/config), urllib con `data=` como envío, "append … to https://" y la salida de `env`.
+- **Sin falsas alarmas nuevas**: 0/34 en el corpus de ajuste y 1/23 en el holdout v1 (igual que antes). En skills reales, ALTO sigue en 1 y MEDIO pasó de 1618 a 1628.
+- Detección: holdout v1 de 10/23 a 22/23. **El holdout v1 ya no es ciego**: las reglas se ajustaron mirando sus fallos, así que esa cifra no prueba que generalicen. En el benchmark independiente (deepset) no hubo cambio. Detalle en `reports/loop_deteccion.md`.
+
 ## 0.3.0
 
 ### Nuevo

@@ -79,7 +79,7 @@ Auditor: ________ · Fecha: ________
 
 ## Límites
 
-- `scan` usa reglas fijas: en un set de validación ciego detectó 10 de 23 ataques (43%) y tuvo 1 falso positivo de 23. Que no haya hallazgos no prueba que algo sea seguro.
+- `scan` usa reglas fijas. Antes de ajustar, detectó 10 de 23 ataques (43%) en un set ciego. Las reglas se ajustaron después sobre ese set, así que ya no cuenta como ciego; hay un benchmark independiente en curso. Que no haya hallazgos no prueba que algo sea seguro.
 - `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; lo heurístico hay que confirmarlo a mano.
 - `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.
 - No se ejecutó ningún servidor.
