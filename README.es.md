@@ -1,5 +1,7 @@
 # agentguard
 
+[English](README.md) · **Español**
+
 Seguridad para agentes de IA que usan skills y servidores MCP. Funciona en tu máquina, sin cuenta y sin dependencias (Python 3.9+).
 
 - `scan`: busca instrucciones ocultas (tool poisoning) en skills (`SKILL.md`) y herramientas MCP (JSON).
@@ -8,7 +10,9 @@ Seguridad para agentes de IA que usan skills y servidores MCP. Funciona en tu m�
 - `trifecta`: avisa si tu configuración junta la "tríada letal" (datos privados + contenido no confiable + salida hacia afuera).
 - `audit`: junta todo en un reporte de auditoría en Markdown.
 
-**No detecta todo.** En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO 2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas reglas. Que no haya hallazgos no prueba que algo sea seguro. Ver [CHANGELOG.md](CHANGELOG.md).
+**No detecta todo.** En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), las reglas solas marcaron como ALTO 2 de 34 ataques (6%); con `--deep` (Claude Haiku), 31 de 34 (91%). En 120 benignos, `--deep` dio 2 falsas alarmas ALTAS y 11 tuvieron algún aviso (9%). En 1170 SKILL.md reales, `--deep` marcó 30 como ALTO (2,6%, todos falsas alarmas al revisarlos a mano) y el 39% tuvo algún aviso. Es una sola medición; el modelo puede variar entre corridas. `--deep` envía el texto a Anthropic y necesita `ANTHROPIC_API_KEY`. Que no haya hallazgos no prueba que algo sea seguro.
+
+`cve`, `trifecta` y `lock`/`verify` no dependen de las reglas de `scan` ni de `--deep`. Detalle: [reports/deep_holdout_v3.md](reports/deep_holdout_v3.md), [reports/deep_ruido.md](reports/deep_ruido.md) y [CHANGELOG.md](CHANGELOG.md).
 
 ## Instalación
 ```bash
@@ -29,10 +33,8 @@ agentguard trifecta [carpeta | archivo_config] [--tools carpeta]
 agentguard audit  [--skills carpeta] [--config archivo] [--tools carpeta] [--sin-red] [--out reporte.md]
 ```
 
-### Idioma / Language
-La salida está en español por defecto. Para inglés, agrega `--lang en` a cualquier comando o usa la variable de entorno `AGENTGUARD_LANG=en`. El reporte de `audit` también sale en inglés (ejemplo: [reports/audit_example_en.md](reports/audit_example_en.md)).
-
-Output is in Spanish by default. For English, add `--lang en` to any command or set `AGENTGUARD_LANG=en`. `audit` also accepts `--project` and `--offline` (aliases of `--proyecto` and `--sin-red`).
+### Idioma
+La salida está en español por defecto. Para inglés, agrega `--lang en` a cualquier comando o usa la variable de entorno `AGENTGUARD_LANG=en`. El reporte de `audit` también sale en inglés (ejemplo: [reports/audit_example_en.md](reports/audit_example_en.md)). En inglés, `audit` acepta también `--project` y `--offline` (alias de `--proyecto` y `--sin-red`).
 ```bash
 agentguard scan ./my-skills --lang en
 agentguard audit --skills ~/.claude/skills --offline --out report.md --lang en
@@ -76,7 +78,7 @@ agentguard audit --skills ~/.claude/skills --out auditoria.md
 Genera un reporte con resumen ejecutivo, hallazgos por severidad, cómo arreglar cada uno y una sección de revisión manual para completar a mano.
 `--sin-red` se salta la consulta a OSV.dev.
 
-### Chequeo semántico (`--deep`, opcional, en prueba)
+### Chequeo semántico (`--deep`, opcional)
 Las reglas fijas no ven ataques escritos como pasos normales ("haz un backup y súbelo a…"). `--deep` agrega un modelo de IA que juzga la intención de cada skill o tool. Solo **suma** hallazgos: nunca quita los de las reglas.
 
 ```bash
@@ -87,26 +89,26 @@ agentguard scan ~/.claude/skills --deep    # pide confirmación antes de enviar
 
 - **Privacidad:** con el proveedor por defecto (Anthropic, modelo `claude-haiku-5-5`) el texto de cada skill se envía a `api.anthropic.com` y necesita `ANTHROPIC_API_KEY`. Nunca se activa solo. Antes de enviar avisa qué se manda y tapa lo que parezca una clave real. Sin terminal interactiva hace falta `--deep-yes`.
 - **Local:** `--deep-provider ollama --deep-model <modelo>` usa Ollama en tu máquina; no sale nada.
-- **Costo:** con Haiku, menos de $0,001 por skill.
+- **Costo:** con Haiku, unos $0,002 por skill real (1170 SKILL.md costaron $2,47).
 - **CI:** los hallazgos de `--deep` no hacen fallar el build salvo con `--deep-fail-on high`.
-- **Límites:** el juicio de un modelo no es determinista y puede equivocarse en ambos sentidos. Todavía no hay una cifra medida de detección; se publicará cuando se mida en el set ciego.
+- **Límites:** el juicio de un modelo no es determinista y puede equivocarse en ambos sentidos. En skills reales largas es ruidoso (ver la frase de arriba): léelo como "para revisar", no como veredicto.
 - También en `audit --skills <carpeta> --deep`.
 
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.4.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
 Con `lang: en` la salida y las anotaciones salen en inglés:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.4.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
   with:
     lang: en
 ```
-Con `deep: true` también corre el chequeo semántico. **Envía el contenido revisado del PR a Anthropic.** Pasa la clave por `env`; en PRs desde forks no hay secretos y `--deep` se salta sin fallar (input disponible desde la próxima versión):
+Con `deep: true` también corre el chequeo semántico. **Envía el contenido revisado del PR a Anthropic.** Pasa la clave por `env`; en PRs desde forks no hay secretos y `--deep` se salta sin fallar:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@main
+- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
   with:
     deep: true            # deep-fail-on: high para que un ALTO del juez falle el build
   env:

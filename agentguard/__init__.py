@@ -3,7 +3,7 @@
 Paquete: `scanner` (reglas y escaneo), `cli` (comandos), `cve` (inventario MCP + OSV.dev),
 `trifecta` (tríada letal), `audit` (reporte de auditoría).
 """
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from .cli import cmd_lock, cmd_scan, cmd_verify, main, run
 from .scanner import (

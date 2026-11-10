@@ -37,4 +37,4 @@ path = "agentguard/__init__.py"
 only-include = ["agentguard"]
 
 [tool.hatch.build.targets.sdist]
-only-include = ["agentguard.py", "agentguard", "README.md", "LICENSE", "SECURITY.md", "pyproject.toml"]
+only-include = ["agentguard.py", "agentguard", "README.md", "README.es.md", "LICENSE", "SECURITY.md", "pyproject.toml"]

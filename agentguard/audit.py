@@ -242,10 +242,13 @@ def render(audit: Audit, when: date | None = None, scope: str = "") -> str:
         "",
         "## Límites",
         "",
-        "- En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO "
-        "2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con "
-        "aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas "
-        "reglas. Que no haya hallazgos no prueba que algo sea seguro.",
+        "- En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), las reglas solas marcaron "
+        "como ALTO 2 de 34 ataques (6%); con `--deep` (Claude Haiku), 31 de 34 (91%). En 120 benignos, `--deep` "
+        "dio 2 falsas alarmas ALTAS y 11 tuvieron algún aviso (9%). En 1170 SKILL.md reales, `--deep` marcó 30 "
+        "como ALTO (2,6%, todos falsas alarmas al revisarlos a mano) y el 39% tuvo algún aviso. Es una sola "
+        "medición; el modelo puede variar entre corridas. `--deep` envía el texto a Anthropic y necesita "
+        "ANTHROPIC_API_KEY. Que no haya hallazgos no prueba que algo sea seguro.",
+        "- `cve`, `trifecta` y `lock`/`verify` no dependen de las reglas de `scan` ni de `--deep`.",
         "- `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; "
         "lo heurístico hay que confirmarlo a mano.",
         "- `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.",

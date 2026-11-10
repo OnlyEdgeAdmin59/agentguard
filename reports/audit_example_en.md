@@ -79,7 +79,8 @@ Auditor: ________ · Date: ________
 
 ## Limitations
 
-- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), `scan` rated 2 of 34 attacks HIGH (6%) and flagged 12 at some level (35%), with no HIGH false alarms on 120 benign samples (5 with a MEDIUM notice). Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` don't depend on those rules. No findings does not prove something is safe.
+- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), rules alone rated 2 of 34 attacks HIGH (6%); with `--deep` (Claude Haiku) 31 of 34 (91%). On 120 benign samples, `--deep` raised 2 HIGH false alarms and 11 got some notice (9%). On 1,170 real SKILL.md files, `--deep` rated 30 HIGH (2.6%, all false alarms on manual review) and 39% got some notice. Single measurement; the model can vary between runs. `--deep` sends the text to Anthropic and needs ANTHROPIC_API_KEY. No findings does not prove something is safe.
+- `cve`, `trifecta` and `lock`/`verify` don't depend on the `scan` rules or on `--deep`.
 - `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; heuristic results must be confirmed manually.
 - `cve` only finds vulnerabilities published on OSV.dev for packages with a pinned version.
 - No server was executed.

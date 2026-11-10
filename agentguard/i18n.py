@@ -173,14 +173,20 @@ EN: dict[str, str] = {
     "- [ ] Conclusión:": "- [ ] Conclusion:",
     "Auditor: ________ · Fecha: ________": "Auditor: ________ · Date: ________",
     "## Límites": "## Limitations",
-    "- En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), `scan` marcó como ALTO "
-    "2 de 34 ataques (6%) y con algún aviso 12 (35%), sin falsas alarmas ALTAS en 120 benignos (5 con "
-    "aviso MEDIO). Úsalo como primer filtro: `cve`, `trifecta` y `lock`/`verify` no dependen de esas "
-    "reglas. Que no haya hallazgos no prueba que algo sea seguro.":
-        "- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), `scan` rated 2 of 34 "
-        "attacks HIGH (6%) and flagged 12 at some level (35%), with no HIGH false alarms on 120 benign "
-        "samples (5 with a MEDIUM notice). Use it as a first filter: `cve`, `trifecta` and `lock`/`verify` "
-        "don't depend on those rules. No findings does not prove something is safe.",
+    "- En un set ciego independiente (Skill-Inject, MIT: 34 ataques en 60 textos), las reglas solas marcaron "
+    "como ALTO 2 de 34 ataques (6%); con `--deep` (Claude Haiku), 31 de 34 (91%). En 120 benignos, `--deep` "
+    "dio 2 falsas alarmas ALTAS y 11 tuvieron algún aviso (9%). En 1170 SKILL.md reales, `--deep` marcó 30 "
+    "como ALTO (2,6%, todos falsas alarmas al revisarlos a mano) y el 39% tuvo algún aviso. Es una sola "
+    "medición; el modelo puede variar entre corridas. `--deep` envía el texto a Anthropic y necesita "
+    "ANTHROPIC_API_KEY. Que no haya hallazgos no prueba que algo sea seguro.":
+        "- On an independent blind set (Skill-Inject, MIT: 34 attacks in 60 texts), rules alone rated 2 of 34 "
+        "attacks HIGH (6%); with `--deep` (Claude Haiku) 31 of 34 (91%). On 120 benign samples, `--deep` "
+        "raised 2 HIGH false alarms and 11 got some notice (9%). On 1,170 real SKILL.md files, `--deep` rated "
+        "30 HIGH (2.6%, all false alarms on manual review) and 39% got some notice. Single measurement; the "
+        "model can vary between runs. `--deep` sends the text to Anthropic and needs ANTHROPIC_API_KEY. No "
+        "findings does not prove something is safe.",
+    "- `cve`, `trifecta` y `lock`/`verify` no dependen de las reglas de `scan` ni de `--deep`.":
+        "- `cve`, `trifecta` and `lock`/`verify` don't depend on the `scan` rules or on `--deep`.",
     "- `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; "
     "lo heurístico hay que confirmarlo a mano.":
         "- `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; "

@@ -67,7 +67,7 @@ class Markdown(unittest.TestCase):
     def test_secciones_y_orden(self):
         text = render(build(skills=SKILLS, config=CONFIG, check_fn=offline_check), date(2026, 11, 2))
         for section in ("## Resumen ejecutivo", "**Riesgo general: Alto.**", "## Hallazgos por severidad",
-                        "Cómo arreglar:", "## Revisión manual", "## Límites", "2 de 34 ataques"):
+                        "Cómo arreglar:", "## Revisión manual", "## Límites", "31 de 34 (91%)"):
             self.assertIn(section, text)
         self.assertLess(text.index("### Crítico"), text.index("### Alto"))
         self.assertLess(text.index("### Alto"), text.index("### Info"))
@@ -114,7 +114,7 @@ class Comando(unittest.TestCase):
     def test_version(self):
         code, out = quiet(agentguard.main, ["agentguard", "--version"])
         self.assertEqual((code, out.strip()), (0, f"agentguard {agentguard.__version__}"))
-        self.assertEqual(agentguard.__version__, "0.4.0")
+        self.assertEqual(agentguard.__version__, "0.5.0")
 
 
 if __name__ == "__main__":
