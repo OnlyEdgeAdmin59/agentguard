@@ -277,3 +277,69 @@ def t_scope(label: str) -> str:
         else:
             parts.append(t(part))
     return " · ".join(parts)
+
+
+# scan --deep / audit --deep
+EN.update({
+    "Juicio semántico (deep)": "Semantic judgment (deep)",
+    "Juicio semántico (deep): sin veredicto": "Semantic judgment (deep): no verdict",
+    "motivo: {reason}": "reason: {reason}",
+    "[fragmento no verificable]": "[snippet not verifiable]",
+    "el modelo se negó a responder": "the model declined to answer",
+    "respuesta cortada por max_tokens": "response cut off by max_tokens",
+    "sin respuesta": "no response",
+    "JSON inválido": "invalid JSON",
+    "JSON con campos inesperados": "JSON with unexpected fields",
+    "JSON con valores inválidos": "JSON with invalid values",
+    "pedido rechazado: {msg}": "request rejected: {msg}",
+    "límite de uso de la API": "API rate limit",
+    "error de la API ({code})": "API error ({code})",
+    "error de Ollama ({code})": "Ollama error ({code})",
+    "Falta el SDK de Anthropic. Instálalo con: pip install agentguard-scan[deep]":
+        "The Anthropic SDK is missing. Install it with: pip install agentguard-scan[deep]",
+    "No hay credenciales de Anthropic (define ANTHROPIC_API_KEY)":
+        "No Anthropic credentials (set ANTHROPIC_API_KEY)",
+    "Clave de Anthropic inválida": "Invalid Anthropic key",
+    "La clave de Anthropic no tiene permiso para este modelo": "The Anthropic key has no access to this model",
+    "Modelo no encontrado: {model}": "Model not found: {model}",
+    "Sin conexión con api.anthropic.com": "Cannot reach api.anthropic.com",
+    "Ollama no tiene el modelo {model}. Descárgalo con: ollama pull {model}":
+        "Ollama does not have the model {model}. Download it with: ollama pull {model}",
+    "No se pudo conectar con Ollama en {host}": "Could not connect to Ollama at {host}",
+    "Proveedor desconocido: {p} (usa anthropic u ollama)": "Unknown provider: {p} (use anthropic or ollama)",
+    "Falta el valor de {flag}": "Missing value for {flag}",
+    "--deep-fail-on solo acepta: high": "--deep-fail-on only accepts: high",
+    "Las opciones --deep-* necesitan --deep": "The --deep-* options need --deep",
+    "Con --deep-provider ollama hay que indicar el modelo: --deep-model <nombre>":
+        "With --deep-provider ollama you must name the model: --deep-model <name>",
+    "--deep solo funciona con scan y audit": "--deep only works with scan and audit",
+    "--deep en audit necesita --skills <carpeta>": "--deep in audit needs --skills <folder>",
+    "--deep enviará {n} elemento(s) de {files} archivo(s) ({kb:.0f} KB, ~{tokens} tokens) a {host} "
+    "(modelo {model}). Costo estimado: {cost}. Antes de enviar se tapan las claves que parezcan reales.":
+        "--deep will send {n} item(s) from {files} file(s) ({kb:.0f} KB, ~{tokens} tokens) to {host} "
+        "(model {model}). Estimated cost: {cost}. Anything that looks like a real key is masked before sending.",
+    "--deep juzgará {n} elemento(s) con Ollama en {host} (modelo {model}). No sale nada de esta máquina.":
+        "--deep will judge {n} item(s) with Ollama at {host} (model {model}). Nothing leaves this machine.",
+    "caracteres": "characters",
+    "desconocido": "unknown",
+    "--deep-dry-run: no se envió nada.": "--deep-dry-run: nothing was sent.",
+    "Sin terminal interactiva no se envía nada. Agrega --deep-yes para confirmar.":
+        "Without an interactive terminal nothing is sent. Add --deep-yes to confirm.",
+    "¿Continuar? [s/N] ": "Continue? [y/N] ",
+    "Cancelado: no se envió nada.": "Cancelled: nothing was sent.",
+    "--deep no pudo correr: {err}": "--deep could not run: {err}",
+    "deep ({model}): {calls} llamada(s), {findings} hallazgo(s), {high} ALTO(s), {none} sin veredicto. "
+    "Tokens {tin}/{tout}, costo {cost}.":
+        "deep ({model}): {calls} call(s), {findings} finding(s), {high} HIGH, {none} without verdict. "
+        "Tokens {tin}/{tout}, cost {cost}.",
+    "Se taparon {n} secreto(s) antes de enviar.": "{n} secret(s) were masked before sending.",
+    "Lee la skill o tool completa y confirma si esa instrucción hace falta; si no, quítala o no la "
+    "instales.": "Read the whole skill or tool and confirm whether that instruction is needed; if not, remove it or "
+                 "don't install it.",
+    "el texto se envió a {host}": "the text was sent to {host}",
+    "corrió local con Ollama": "ran locally with Ollama",
+    "- `--deep` usó {model} ({sent}). El juicio de un modelo no es determinista y puede "
+    "equivocarse en ambos sentidos; confírmalo a mano.":
+        "- `--deep` used {model} ({sent}). A model's judgment is not deterministic and can be wrong in both "
+        "directions; confirm it by hand.",
+})

@@ -4,7 +4,8 @@ Uso: agentguard audit [--skills carpeta] [--config archivo] [--proyecto carpeta]
                       [--sin-red] [--out reporte.md]
 Sin --config revisa las configs MCP instaladas (como `cve` y `trifecta`). --sin-red no consulta OSV.dev.
 En inglés: --project equivale a --proyecto y --offline a --sin-red.
-Sale con código 1 si hay hallazgos Críticos o Altos.
+--deep (con --skills) suma el juicio semántico de un modelo; mismas opciones --deep-* que scan.
+Sale con código 1 si hay hallazgos Críticos o Altos (los de --deep solo con --deep-fail-on high).
 """
 from __future__ import annotations
 
@@ -48,7 +49,8 @@ USAGE_EN = """Markdown audit report: combines scan, cve and trifecta.
 Usage: agentguard audit [--skills folder] [--config file] [--project folder] [--tools folder]
                         [--offline] [--out report.md]
 Without --config it checks the installed MCP configs (like `cve` and `trifecta`). --offline skips OSV.dev.
-Exits with code 1 on Critical or High findings.
+--deep (with --skills) adds a semantic judgment from a model; same --deep-* options as scan.
+Exits with code 1 on Critical or High findings (--deep ones only with --deep-fail-on high).
 """
 MAX_PLACES = 5  # lugares que se listan por regla MEDIO agrupada
 
@@ -67,6 +69,25 @@ class Item:
 class Audit:
     items: list[Item] = field(default_factory=list)
     resumen: list[str] = field(default_factory=list)
+    limites: list[str] = field(default_factory=list)  # límites extra según lo que se corrió (p. ej. --deep)
+
+
+DEEP_SEVERITY = {"ALTO": "Alto", "MEDIO": "Medio", "INFO": "Info"}
+DEEP_FIX = ("Lee la skill o tool completa y confirma si esa instrucción hace falta; si no, quítala o no la "
+            "instales.")
+
+
+def audit_deep(findings: list, stats, provider: str, out: Audit) -> None:
+    from .deep_cli import summary
+    for f in findings:
+        detail = (f"«{f.snippet}» — {t(f.reason)}" if f.snippet else t(f.reason)).strip(" —")
+        out.items.append(Item(DEEP_SEVERITY.get(f.level, "Info"), "deep", t(f.rule),
+                              f"{show(f.source.split('::')[0])}:{f.line}", detail, t(DEEP_FIX)))
+    out.resumen.append(summary(findings, stats))
+    sent = (t("el texto se envió a {host}", host="api.anthropic.com") if provider == "anthropic"
+            else t("corrió local con Ollama"))
+    out.limites.append(t("- `--deep` usó {model} ({sent}). El juicio de un modelo no es determinista y puede "
+                         "equivocarse en ambos sentidos; confírmalo a mano.", model=stats.model, sent=sent))
 
 
 def show(path: str | Path) -> str:
@@ -229,11 +250,19 @@ def render(audit: Audit, when: date | None = None, scope: str = "") -> str:
         "lo heurístico hay que confirmarlo a mano.",
         "- `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.",
         "- No se ejecutó ningún servidor.",
-    ]]
+    ]] + audit.limites
     return "\n".join(lines) + "\n"
 
 
-def cmd_audit(args: list[str], check_fn=check) -> int:
+def cmd_audit(args: list[str], check_fn=check, deep_transport=None) -> int:
+    deep_opts = None
+    if any(a.startswith("--deep") for a in args):
+        from .deep_cli import pop_deep
+        parsed = pop_deep(args)
+        if isinstance(parsed, str):
+            print(parsed)
+            return 2
+        deep_opts, args = parsed
     opts = {}
     flags = {"--skills", "--config", "--proyecto", "--tools", "--out"}
     args = ["--proyecto" if a == "--project" else "--sin-red" if a == "--offline" else a for a in args]
@@ -248,8 +277,17 @@ def cmd_audit(args: list[str], check_fn=check) -> int:
         else:
             print(USAGE_EN if get_lang() == "en" else __doc__)
             return 2
+    if deep_opts is not None and deep_opts.enabled and "--skills" not in opts:
+        print(t("--deep en audit necesita --skills <carpeta>"))
+        return 2
     audit = build(opts.get("--skills"), opts.get("--config"), opts.get("--proyecto"), opts.get("--tools"), check_fn)
-    names = {"--proyecto": "project"} if get_lang() == "en" else {}
+    if deep_opts is not None and deep_opts.enabled:
+        from .deep_cli import session
+        result = session(collect(opts["--skills"]), deep_opts, transport=deep_transport)
+        if isinstance(result, int):
+            return result
+        audit_deep(*result, deep_opts.provider, audit)
+    names ={"--proyecto": "project"} if get_lang() == "en" else {}
     scope = (", ".join(f"{names.get(k, k[2:])} `{show(v)}`" for k, v in opts.items() if k != "--out")
              or t("configs MCP instaladas"))
     text = render(audit, scope=scope)
@@ -259,4 +297,6 @@ def cmd_audit(args: list[str], check_fn=check) -> int:
                 path=opts["--out"], n=len(audit.items), risk=t(overall(audit.items))))
     else:
         print(text)
-    return 1 if any(i.severidad in ("Crítico", "Alto") for i in audit.items) else 0
+    fail_deep = deep_opts is not None and deep_opts.fail_on_high
+    return 1 if any(i.severidad in ("Crítico", "Alto") and (i.origen != "deep" or fail_deep)
+                    for i in audit.items) else 0

@@ -76,6 +76,22 @@ agentguard audit --skills ~/.claude/skills --out auditoria.md
 Genera un reporte con resumen ejecutivo, hallazgos por severidad, cómo arreglar cada uno y una sección de revisión manual para completar a mano.
 `--sin-red` se salta la consulta a OSV.dev.
 
+### Chequeo semántico (`--deep`, opcional, en prueba)
+Las reglas fijas no ven ataques escritos como pasos normales ("haz un backup y súbelo a…"). `--deep` agrega un modelo de IA que juzga la intención de cada skill o tool. Solo **suma** hallazgos: nunca quita los de las reglas.
+
+```bash
+pip install agentguard-scan[deep]          # SDK de Anthropic (solo para --deep)
+agentguard scan ~/.claude/skills --deep --deep-dry-run   # qué se enviaría, a dónde y cuánto cuesta
+agentguard scan ~/.claude/skills --deep    # pide confirmación antes de enviar
+```
+
+- **Privacidad:** con el proveedor por defecto (Anthropic, modelo `claude-haiku-5-5`) el texto de cada skill se envía a `api.anthropic.com` y necesita `ANTHROPIC_API_KEY`. Nunca se activa solo. Antes de enviar avisa qué se manda y tapa lo que parezca una clave real. Sin terminal interactiva hace falta `--deep-yes`.
+- **Local:** `--deep-provider ollama --deep-model <modelo>` usa Ollama en tu máquina; no sale nada.
+- **Costo:** con Haiku, menos de $0,001 por skill.
+- **CI:** los hallazgos de `--deep` no hacen fallar el build salvo con `--deep-fail-on high`.
+- **Límites:** el juicio de un modelo no es determinista y puede equivocarse en ambos sentidos. Todavía no hay una cifra medida de detección; se publicará cuando se mida en el set ciego.
+- También en `audit --skills <carpeta> --deep`.
+
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
@@ -87,4 +103,12 @@ Con `lang: en` la salida y las anotaciones salen en inglés:
 - uses: OnlyEdgeAdmin59/agentguard@v0.4.0
   with:
     lang: en
+```
+Con `deep: true` también corre el chequeo semántico. **Envía el contenido revisado del PR a Anthropic.** Pasa la clave por `env`; en PRs desde forks no hay secretos y `--deep` se salta sin fallar (input disponible desde la próxima versión):
+```yaml
+- uses: OnlyEdgeAdmin59/agentguard@main
+  with:
+    deep: true            # deep-fail-on: high para que un ALTO del juez falle el build
+  env:
+    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
