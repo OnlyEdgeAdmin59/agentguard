@@ -17,3 +17,4 @@ Tope total: $15. Fuente: `usage` de cada respuesta y la tabla de precios de `age
 | 2026-11-09 21:53 | tests/corpus_holdout | claude-sonnet-5-5 | v3 | 1 corrida(s) | 46 | 59154 | 4582 | $0.1641 |
 | 2026-11-09 21:55 | tests/corpus_holdout_v2 | claude-sonnet-5-5 | v3 | 1 corrida(s) | 662 | 834744 | 77670 | $2.4462 |
 | 2026-11-09 22:11 | tests/corpus_holdout_v3 | claude-haiku-5-5 | v3 | ciego final | 180 | 443390 | 19672 | $0.0542 |
+| 2026-11-09 23:05 | ~/.claude SKILL.md (ruido) | claude-haiku-5-5 | v3 | skills reales | 1894 | 21888660 | 564298 | $2.4710 |
