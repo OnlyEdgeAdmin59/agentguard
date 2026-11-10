@@ -16,3 +16,4 @@ Tope total: $15. Fuente: `usage` de cada respuesta y la tabla de precios de `age
 | 2026-11-09 21:52 | tests/corpus | claude-sonnet-5-5 | v3 | 1 corrida(s) | 67 | 84136 | 6663 | $0.2349 |
 | 2026-11-09 21:53 | tests/corpus_holdout | claude-sonnet-5-5 | v3 | 1 corrida(s) | 46 | 59154 | 4582 | $0.1641 |
 | 2026-11-09 21:55 | tests/corpus_holdout_v2 | claude-sonnet-5-5 | v3 | 1 corrida(s) | 662 | 834744 | 77670 | $2.4462 |
+| 2026-11-09 22:11 | tests/corpus_holdout_v3 | claude-haiku-5-5 | v3 | ciego final | 180 | 443390 | 19672 | $0.0542 |
