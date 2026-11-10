@@ -187,6 +187,14 @@ def render(title: str, corpus: str, model: str, provider: str, reps: list[dict],
         lines.append(f"- {c['id']} ({lvl})" + (f": {v[0].reason}" if detail and v else ""))
     if not miss:
         lines.append("Ninguno.")
+    deep_miss = [c for c in mal if c not in miss and "ALTO" not in levels(last_verdicts.get(c["id"], []))]
+    lines += ["", "## Ataques que solo vieron las reglas (deep sin ALTO)", ""]
+    for c in deep_miss:
+        v = last_verdicts.get(c["id"], [])
+        lvl = ",".join(sorted(levels(v))) or "LIMPIO"
+        lines.append(f"- {c['id']} ({c.get('tipo', '?')}, {lvl})" + (f": {v[0].reason}" if detail and v else ""))
+    if not deep_miss:
+        lines.append("Ninguno.")
     return "\n".join(lines) + "\n"
 
 
