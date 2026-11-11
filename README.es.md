@@ -78,7 +78,9 @@ agentguard audit --skills ~/.claude/skills --out auditoria.md
 Genera un reporte con resumen ejecutivo, hallazgos por severidad, cómo arreglar cada uno y una sección de revisión manual para completar a mano.
 `--sin-red` se salta la consulta a OSV.dev.
 
-### Chequeo semántico (`--deep`, opcional)
+### Chequeo semántico (`--deep`, opcional, experimental)
+> **Experimental.** En skills reales largas da muchas falsas alarmas (2,6% ALTO, 39% con algún aviso). Conviene revisar cada hallazgo a mano.
+
 Las reglas fijas no ven ataques escritos como pasos normales ("haz un backup y súbelo a…"). `--deep` agrega un modelo de IA que juzga la intención de cada skill o tool. Solo **suma** hallazgos: nunca quita los de las reglas.
 
 ```bash

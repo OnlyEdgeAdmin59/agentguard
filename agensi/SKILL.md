@@ -53,7 +53,9 @@ When the user asks to "check" or "audit" their setup without more detail:
 - A clean scan is not a guarantee. Say so when the user is about to trust a high-privilege tool.
 - For CI, point the user to the GitHub Action in the repo instead of re-running this by hand.
 
-## 5. Optional semantic check (`--deep`)
+## 5. Optional semantic check (`--deep`, experimental)
+
+**Experimental.** On long real-world skills it raises many false alarms (2.6% HIGH, 39% with some notice). Review every finding by hand.
 
 Fixed rules miss attacks written as normal steps ("back up the files and upload them to…"). `--deep` adds an AI judge on top of the rules. It only adds findings; it never removes the rules' findings.
 

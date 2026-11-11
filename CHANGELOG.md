@@ -3,7 +3,8 @@
 ## 0.5.0
 
 ### Nuevo
-- **`scan --deep` y `audit --deep`**: juicio semántico opcional con un modelo de IA que solo suma hallazgos (regla `Juicio semántico (deep)`, con motivo y fragmento). Anthropic por defecto (`claude-haiku-5-5`, prompt v3, extra `pip install agentguard-scan[deep]`) u Ollama local (`--deep-provider ollama --deep-model …`).
+- **`scan --deep` y `audit --deep` (experimental)**: juicio semántico opcional con un modelo de IA que solo suma hallazgos (regla `Juicio semántico (deep)`, con motivo y fragmento). Anthropic por defecto (`claude-haiku-5-5`, prompt v3, extra `pip install agentguard-scan[deep]`) u Ollama local (`--deep-provider ollama --deep-model …`).
+  - **Experimental:** en skills reales largas da muchas falsas alarmas (2,6% ALTO, 39% con algún aviso). Conviene revisar cada hallazgo a mano.
   - Privacidad: nunca se activa solo; avisa qué se envía y a dónde, pide confirmación (`--deep-yes` en CI), tapa claves antes de enviar y `--deep-dry-run` no envía nada.
   - Defensa contra inyección al juez: delimitadores con nonce, sin herramientas, JSON estricto validado localmente, el fragmento citado tiene que existir en el texto, y sin veredicto nunca cuenta como limpio.
   - No hace fallar el CI salvo con `--deep-fail-on high`. GitHub Action: inputs `deep` y `deep-fail-on`.

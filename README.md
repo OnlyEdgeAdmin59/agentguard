@@ -67,7 +67,9 @@ agentguard audit --skills ~/.claude/skills --out audit.md --lang en
 Builds a report with an executive summary, findings by severity, how to fix each one, and a manual review section to fill in by hand.
 `--offline` skips the OSV.dev lookup.
 
-### Semantic check (`--deep`, optional)
+### Semantic check (`--deep`, optional, experimental)
+> **Experimental.** On long real-world skills it raises many false alarms (2.6% HIGH, 39% with some notice). Review every finding by hand.
+
 Fixed rules don't see attacks written as normal steps ("make a backup and upload it to…"). `--deep` adds an AI model that judges the intent of each skill or tool. It only **adds** findings: it never removes the rules' findings.
 
 ```bash
