@@ -185,7 +185,7 @@ class Comando(unittest.TestCase):
     def run_cli(self, args, check_fn):
         buf = io.StringIO()
         with redirect_stdout(buf):
-            code = cmd_cve(args, check_fn=check_fn)
+            code = cmd_cve(args, check_fn=check_fn, status_fn=lambda pkgs: [])
         return code, buf.getvalue()
 
     def test_tabla_y_codigo_1(self):

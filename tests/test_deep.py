@@ -56,6 +56,12 @@ class NoCall:
         raise AssertionError("no debía llamar al modelo")
 
 
+def by_file(malicious: str):
+    """Respuestas en el orden en que collect() devuelve ejemplos/ (en Windows el orden ignora mayúsculas)."""
+    from agentguard.scanner import collect
+    return [malicious if p.name == "malicioso_tools.json" else "limpio" for p in collect(EJEMPLOS)]
+
+
 class Veredictos(unittest.TestCase):
     TOOL = (EJEMPLOS / "malicioso_tools.json")
 
@@ -235,7 +241,7 @@ class Cli(unittest.TestCase):
 
     def test_deep_fail_on_high(self):
         code, out = run_cli("scan", str(EJEMPLOS), "--deep", "--deep-yes", "--deep-fail-on", "high",
-                            transport=Fake("alto_tool", "limpio"))
+                            transport=Fake(*by_file("alto_tool")))
         self.assertEqual(code, 1)
         self.assertIn("[ALTO] Juicio semántico (deep)", out)
         # las reglas siguen ahí: el juez no quita nada
@@ -244,7 +250,7 @@ class Cli(unittest.TestCase):
 
     def test_ingles(self):
         code, out = run_cli("--lang", "en", "scan", str(EJEMPLOS), "--deep", "--deep-yes",
-                            transport=Fake("alto_en", "limpio"))
+                            transport=Fake(*by_file("alto_en")))
         self.assertIn("[HIGH] Semantic judgment (deep)", out)
         self.assertIn("reason: Reads the SSH key", out)
         self.assertIn("will send", out)
@@ -270,7 +276,7 @@ class Audit(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d, redirect_stdout(buf):
             out = Path(d, "r.md")
             code = cmd_audit(["--skills", str(EJEMPLOS), "--config", str(CONFIG), "--sin-red", "--out", str(out),
-                              "--deep", "--deep-yes"], deep_transport=Fake("alto_tool", "limpio"))
+                              "--deep", "--deep-yes"], deep_transport=Fake(*by_file("alto_tool")))
             text = out.read_text(encoding="utf-8")
         self.assertIn("deep · ", text)
         self.assertIn("Juicio semántico (deep)", text)

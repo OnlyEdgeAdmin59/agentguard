@@ -100,7 +100,7 @@ class Comando(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "a.md"
             code, printed = quiet(cmd_audit, ["--skills", str(SKILLS), "--config", str(CONFIG), "--out", str(out)],
-                                  check_fn=offline_check)
+                                  check_fn=offline_check, status_fn=lambda pkgs: [])
             self.assertEqual(code, 1)
             self.assertIn("Reporte guardado", printed)
             self.assertIn("## Revisión manual", out.read_text(encoding="utf-8"))
@@ -114,7 +114,7 @@ class Comando(unittest.TestCase):
     def test_version(self):
         code, out = quiet(agentguard.main, ["agentguard", "--version"])
         self.assertEqual((code, out.strip()), (0, f"agentguard {agentguard.__version__}"))
-        self.assertEqual(agentguard.__version__, "0.5.0")
+        self.assertEqual(agentguard.__version__, "0.6.0")
 
 
 if __name__ == "__main__":

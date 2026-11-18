@@ -98,6 +98,37 @@ EN: dict[str, str] = {
     "comando '{cmd}' no indica un paquete npm/PyPI": "command '{cmd}' does not point to an npm/PyPI package",
     "versión no fijada (se ejecuta la última)": "version not pinned (runs the latest)",
     "sin corrección": "no fix", "desconocida": "unknown",
+    # cve: estado en el registro (npm / PyPI)
+    "obsoleto": "deprecated", "versión retirada": "version yanked", "no existe": "does not exist",
+    "abandonado": "abandoned",
+    "no está en {registry} (posible nombre inventado o tomado por un atacante)":
+        "not on {registry} (possibly a made-up name, or one taken over by an attacker)",
+    "la versión {version} no existe en {registry}": "version {version} does not exist on {registry}",
+    "{msg} — actualizar a {latest}": "{msg} — update to {latest}",
+    "sin versiones nuevas hace {months} meses": "no new versions in {months} months",
+    "{version} fue retirada (yanked): {msg}": "{version} was yanked: {msg}",
+    "{version} fue retirada (yanked)": "{version} was yanked",
+    "el autor lo marcó como inactivo (Development Status :: 7 - Inactive)":
+        "the author marked it inactive (Development Status :: 7 - Inactive)",
+    "[INFO] No se pudo consultar el estado en npm/PyPI: {e}": "[INFO] Could not check status on npm/PyPI: {e}",
+    "\nEstado en el registro (npm / PyPI):": "\nRegistry status (npm / PyPI):",
+    "{n} paquete(s) obsoleto(s), retirado(s) o inexistente(s)": "{n} deprecated, yanked or nonexistent package(s)",
+    "No se pudo consultar el estado en npm/PyPI": "Could not check status on npm/PyPI",
+    "{pkg}{version}: {kind}": "{pkg}{version}: {kind}",
+    "**estado**: {n} paquete(s) obsoleto(s), retirado(s) o inexistente(s) en npm/PyPI.":
+        "**status**: {n} deprecated, yanked or nonexistent package(s) on npm/PyPI.",
+    "Cámbialo por el reemplazo que indica el mensaje, o quita el servidor: ya no recibe parches.":
+        "Switch to the replacement the message names, or remove the server: it no longer gets patches.",
+    "Fija una versión que no esté retirada.": "Pin a version that is not yanked.",
+    "Revisa el nombre exacto con la documentación oficial antes de instalarlo: "
+    "un nombre inventado lo puede registrar un atacante.":
+        "Check the exact name against the official docs before installing it: "
+        "an attacker can register a made-up name.",
+    "Busca una alternativa mantenida o revisa su código antes de seguir usándolo.":
+        "Find a maintained alternative or review its code before you keep using it.",
+    # --warn-only
+    "[INFO] --warn-only: hay hallazgos, pero el código de salida queda en 0.":
+        "[INFO] --warn-only: there are findings, but the exit code stays 0.",
     # trifecta
     "Lee datos privados": "Reads private data",
     "Trae contenido no confiable": "Brings in untrusted content",
@@ -191,6 +222,10 @@ EN: dict[str, str] = {
     "lo heurístico hay que confirmarlo a mano.":
         "- `trifecta` classifies with a table of known servers and, otherwise, with keyword heuristics; "
         "heuristic results must be confirmed manually.",
+    "- El estado (obsoleto, retirado, inexistente, abandonado) sale de lo que publican npm y PyPI; "
+    "un paquete activo no es por eso seguro.":
+        "- Status (deprecated, yanked, nonexistent, abandoned) comes from what npm and PyPI publish; "
+        "an active package is not safe just because of that.",
     "- `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.":
         "- `cve` only finds vulnerabilities published on OSV.dev for packages with a pinned version.",
     "- No se ejecutó ningún servidor.": "- No server was executed.",

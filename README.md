@@ -6,7 +6,7 @@ Security for AI agents that use skills and MCP servers. Runs on your machine, no
 
 - `scan`: looks for hidden instructions (tool poisoning) in skills (`SKILL.md`) and MCP tools (JSON).
 - `lock` / `verify`: warns if a connector changed after you approved it (rug pull).
-- `cve`: checks installed MCP servers against known vulnerabilities (OSV.dev).
+- `cve`: checks installed MCP servers against known vulnerabilities (OSV.dev) and flags deprecated, yanked or nonexistent packages on npm/PyPI.
 - `trifecta`: warns if your setup combines the "lethal trifecta" (private data + untrusted content + a way out).
 - `audit`: puts it all together in a Markdown audit report.
 
@@ -50,7 +50,18 @@ mcp-remote                               0.1.15       CVE-2025-6514          CRI
 ```
 Reads the package and version of each server (`npx pkg@1.2.3`, `uvx pkg==1.2.3`, …) and queries [OSV.dev](https://osv.dev).
 Only name, ecosystem and version are sent to OSV; never tool descriptions or paths.
-Exits with 1 if there are vulnerabilities and with 2 if there is no network.
+
+It also checks each package on npm/PyPI (only the package name is requested, the same as npx/uvx do):
+```
+[HIGH] @modelcontextprotocol/server-github (npm): deprecated — Archived and unmaintained; no security guarantees. …
+[HIGH] mcp-made-up-name (npm): does not exist — not on registry.npmjs.org (possibly a made-up name, or one taken over by an attacker)
+```
+A package can be archived with no CVE at all, and AI agents still install it because their knowledge is frozen. Abandoned packages (no release in 24+ months) are only a warning. `--no-status` skips this check.
+
+Exits with 1 if there are vulnerabilities or deprecated/yanked/nonexistent packages, and with 2 if OSV.dev is unreachable.
+
+### Adopting in CI without breaking builds
+`--warn-only` (any command) prints every finding but exits 0. In the Action: `warn-only: true`.
 
 ### trifecta
 ```bash
@@ -88,14 +99,14 @@ agentguard scan ~/.claude/skills --deep                    # asks for confirmati
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
   with:
     lang: en
 ```
 Fails the build on HIGH findings and marks them on the PR line.
 With `deep: true` it also runs the semantic check. **It sends the reviewed PR content to Anthropic.** Pass the key through `env`; on PRs from forks there are no secrets and `--deep` is skipped without failing:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
   with:
     deep: true            # deep-fail-on: high to make a HIGH from the judge fail the build
   env:

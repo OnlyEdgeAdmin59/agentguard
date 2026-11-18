@@ -16,7 +16,8 @@ from datetime import date
 from pathlib import Path
 
 from .i18n import get_lang, t, t_note, t_scope
-from .cve import check, inventory, servers_from_file
+from .cve import check, check_status, inventory, servers_from_file
+from .cve.status import ABANDONADO, GRAVES
 from .scanner import collect, escalate, scan_file
 from .trifecta import CAPS, LABEL, analyze, groups, scopes_of
 
@@ -156,6 +157,34 @@ def audit_cve(servers: list, check_fn, out: Audit) -> None:
                          "{vulns} vulnerabilidad(es).", servers=len(servers), packages=len(packages), vulns=len(vulns)))
 
 
+STATUS_FIX = {
+    "obsoleto": "Cámbialo por el reemplazo que indica el mensaje, o quita el servidor: ya no recibe parches.",
+    "versión retirada": "Fija una versión que no esté retirada.",
+    "no existe": "Revisa el nombre exacto con la documentación oficial antes de instalarlo: "
+                 "un nombre inventado lo puede registrar un atacante.",
+    "abandonado": "Busca una alternativa mantenida o revisa su código antes de seguir usándolo.",
+}
+
+
+def audit_status(servers: list, status_fn, out: Audit) -> None:
+    if status_fn is None:
+        return
+    try:
+        statuses = status_fn([s.package for s in servers if s.package])
+    except OSError as e:
+        out.items.append(Item("Info", "cve", t("No se pudo consultar el estado en npm/PyPI"), t("red"), str(e),
+                              t("Vuelve a correr `agentguard cve` con conexión.")))
+        return
+    for st in statuses:
+        level = "Alto" if st.kind in GRAVES else "Bajo" if st.kind == ABANDONADO else "Medio"
+        version = f" {st.package.version}" if st.package.version else ""
+        out.items.append(Item(level, "cve", t("{pkg}{version}: {kind}", pkg=st.package.name, version=version,
+                                              kind=t(st.kind)),
+                              st.package.ecosystem, t(st.template, **dict(st.values)), t(STATUS_FIX[st.kind])))
+    serious = sum(1 for st in statuses if st.kind in GRAVES)
+    out.resumen.append(t("**estado**: {n} paquete(s) obsoleto(s), retirado(s) o inexistente(s) en npm/PyPI.", n=serious))
+
+
 def audit_trifecta(scopes: dict, out: Audit) -> None:
     hits = 0
     for label, group in scopes.items():
@@ -182,13 +211,14 @@ def audit_trifecta(scopes: dict, out: Audit) -> None:
 
 
 def build(skills: Path | None = None, config: Path | None = None, project: Path | None = None,
-          tools_dir: Path | None = None, check_fn=check) -> Audit:
+          tools_dir: Path | None = None, check_fn=check, status_fn=None) -> Audit:
     out = Audit()
     if skills is not None:
         audit_scan(skills, out)
     project = project or Path.cwd()
     servers = servers_from_file("archivo", config) if config else inventory(project=project)
     audit_cve(servers, check_fn, out)
+    audit_status(servers, status_fn, out)
     if config:
         scopes = {f"archivo · {k}": v for k, v in scopes_of(config, tools_dir).items()}
     else:
@@ -252,12 +282,14 @@ def render(audit: Audit, when: date | None = None, scope: str = "") -> str:
         "- `trifecta` clasifica con una tabla de servidores conocidos y, si no están, con heurística por palabras; "
         "lo heurístico hay que confirmarlo a mano.",
         "- `cve` solo encuentra vulnerabilidades publicadas en OSV.dev para paquetes con versión fija.",
+        "- El estado (obsoleto, retirado, inexistente, abandonado) sale de lo que publican npm y PyPI; "
+        "un paquete activo no es por eso seguro.",
         "- No se ejecutó ningún servidor.",
     ]] + audit.limites
     return "\n".join(lines) + "\n"
 
 
-def cmd_audit(args: list[str], check_fn=check, deep_transport=None) -> int:
+def cmd_audit(args: list[str], check_fn=check, deep_transport=None, status_fn=check_status) -> int:
     deep_opts = None
     if any(a.startswith("--deep") for a in args):
         from .deep_cli import pop_deep
@@ -275,7 +307,7 @@ def cmd_audit(args: list[str], check_fn=check, deep_transport=None) -> int:
             opts[args[i]] = Path(args[i + 1])
             i += 2
         elif args[i] == "--sin-red":
-            check_fn = None
+            check_fn = status_fn = None
             i += 1
         else:
             print(USAGE_EN if get_lang() == "en" else __doc__)
@@ -283,7 +315,8 @@ def cmd_audit(args: list[str], check_fn=check, deep_transport=None) -> int:
     if deep_opts is not None and deep_opts.enabled and "--skills" not in opts:
         print(t("--deep en audit necesita --skills <carpeta>"))
         return 2
-    audit = build(opts.get("--skills"), opts.get("--config"), opts.get("--proyecto"), opts.get("--tools"), check_fn)
+    audit = build(opts.get("--skills"), opts.get("--config"), opts.get("--proyecto"), opts.get("--tools"), check_fn,
+                  status_fn)
     if deep_opts is not None and deep_opts.enabled:
         from .deep_cli import session
         result = session(collect(opts["--skills"]), deep_opts, transport=deep_transport)
