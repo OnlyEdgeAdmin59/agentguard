@@ -9,12 +9,14 @@ Uso:
                     [--deep-dry-run] [--deep-fail-on high]
   agentguard lock  <carpeta>   guarda huellas en agentguard.lock.json
   agentguard verify <carpeta>   alerta si algo cambió (rug pull)
-  agentguard cve [carpeta]      CVE conocidos de los servidores MCP instalados (OSV.dev)
+  agentguard cve [carpeta]      CVE conocidos (OSV.dev) y paquetes obsoletos, retirados o
+                                inexistentes en npm/PyPI (--sin-estado para no consultarlo)
   agentguard trifecta [carpeta] [--tools dir]
                                 tríada letal: datos privados + contenido no confiable + salida
   agentguard audit [--skills dir] [--config archivo] [--sin-red] [--out reporte.md]
                                 reporte de auditoría en Markdown (scan + cve + trifecta)
 Opción global: --lang en (o AGENTGUARD_LANG=en) para salida en inglés.
+Opción global: --warn-only muestra todo pero sale con 0 aunque haya hallazgos (para adoptar en CI sin romperlo).
 Sale con código 1 si hay hallazgos ALTOS o cambios (útil para CI); los de --deep solo con --deep-fail-on high.
 """
 from __future__ import annotations
@@ -38,12 +40,14 @@ Usage:
                     [--deep-dry-run] [--deep-fail-on high]
   agentguard lock  <folder>   save fingerprints to agentguard.lock.json
   agentguard verify <folder>   alert if anything changed (rug pull)
-  agentguard cve [folder]      known CVEs in installed MCP servers (OSV.dev)
+  agentguard cve [folder]      known CVEs (OSV.dev) and deprecated, yanked or nonexistent
+                               packages on npm/PyPI (--no-status to skip it)
   agentguard trifecta [folder] [--tools dir]
                                lethal trifecta: private data + untrusted content + outbound
   agentguard audit [--skills dir] [--config file] [--project dir] [--tools dir] [--offline] [--out report.md]
                                Markdown audit report (scan + cve + trifecta)
 Global option: --lang en (or AGENTGUARD_LANG=en) for English output.
+Global option: --warn-only prints everything but exits 0 even with findings (to adopt in CI without breaking it).
 Exits with code 1 on HIGH findings or changes (useful in CI); --deep findings only with --deep-fail-on high.
 """
 
@@ -131,6 +135,15 @@ def main(argv: list[str]) -> int:
         except (AttributeError, ValueError):
             pass
     argv = pop_lang(list(argv))
+    warn_only = "--warn-only" in argv
+    code = dispatch([a for a in argv if a != "--warn-only"])
+    if warn_only and code == 1:
+        print(t("[INFO] --warn-only: hay hallazgos, pero el código de salida queda en 0."))
+        return 0
+    return code
+
+
+def dispatch(argv: list[str]) -> int:
     if argv[1:] == ["--version"]:
         from . import __version__
         print(f"agentguard {__version__}")

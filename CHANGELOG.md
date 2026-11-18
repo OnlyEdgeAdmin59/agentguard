@@ -1,5 +1,23 @@
 # Cambios
 
+## 0.6.0
+
+### Nuevo
+- **`cve` revisa el estado de cada paquete en npm y PyPI**, no solo los CVE de OSV. Marca:
+  - **obsoleto**: el registro lo marca como deprecado (p. ej. los servidores oficiales archivados "sin garantías de seguridad", como `@modelcontextprotocol/server-github`), o la versión fijada está deprecada y hay una nueva (dice a cuál actualizar). En PyPI, `Development Status :: 7 - Inactive`.
+  - **versión retirada**: la versión fijada fue retirada (yanked) en PyPI, con el motivo.
+  - **no existe**: el paquete o la versión no están en el registro. Un nombre inventado por un agente de IA lo puede registrar un atacante.
+  - **abandonado** (solo aviso): sin versiones nuevas hace 24 meses o más.
+  - Motivo: caso MCPhantom (nov-2026), agentes de IA que instalan paquetes MCP deprecados porque su conocimiento quedó congelado. Un paquete archivado puede no tener ningún CVE.
+  - Revisa también los paquetes sin versión fija (lo que npx/uvx instalarían hoy).
+  - Obsoleto, retirado o inexistente hacen salir con código 1; abandonado solo avisa. Si npm/PyPI no responden, avisa y no falla por eso.
+  - Privacidad: a npm/PyPI solo se pide el nombre del paquete (lo mismo que pide npx/uvx al instalarlo).
+  - `--sin-estado` / `--no-status` para no consultarlo. `audit` lo incluye (sección **estado**); `audit --sin-red` tampoco lo consulta.
+- **`--warn-only` (opción global)**: muestra todo pero sale con 0 aunque haya hallazgos, para adoptar agentguard en CI sin romper builds. Los errores de uso siguen saliendo con 2. GitHub Action: input `warn-only`.
+
+### Arreglado
+- Dos tests de `--deep` dependían del orden de archivos de Windows (que ignora mayúsculas); ahora pasan en Linux y macOS también.
+
 ## 0.5.0
 
 ### Nuevo

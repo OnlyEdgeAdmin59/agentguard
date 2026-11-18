@@ -6,7 +6,7 @@ Seguridad para agentes de IA que usan skills y servidores MCP. Funciona en tu m�
 
 - `scan`: busca instrucciones ocultas (tool poisoning) en skills (`SKILL.md`) y herramientas MCP (JSON).
 - `lock` / `verify`: avisa si un conector cambió después de aprobarlo (rug pull).
-- `cve`: revisa los servidores MCP instalados contra vulnerabilidades conocidas (OSV.dev).
+- `cve`: revisa los servidores MCP instalados contra vulnerabilidades conocidas (OSV.dev) y marca paquetes obsoletos, retirados o inexistentes en npm/PyPI.
 - `trifecta`: avisa si tu configuración junta la "tríada letal" (datos privados + contenido no confiable + salida hacia afuera).
 - `audit`: junta todo en un reporte de auditoría en Markdown.
 
@@ -52,7 +52,18 @@ mcp-remote                               0.1.15       CVE-2025-6514          CRI
 ```
 Lee paquete y versión de cada servidor (`npx pkg@1.2.3`, `uvx pkg==1.2.3`, …) y consulta [OSV.dev](https://osv.dev).
 A OSV solo se envía nombre, ecosistema y versión; nunca descripciones de tools ni rutas.
-Sale con 1 si hay vulnerabilidades y con 2 si no hay red.
+
+También revisa cada paquete en npm/PyPI (solo se pide el nombre, lo mismo que hacen npx/uvx):
+```
+[ALTO] @modelcontextprotocol/server-github (npm): obsoleto — Archived and unmaintained; no security guarantees. …
+[ALTO] mcp-nombre-inventado (npm): no existe — no está en registry.npmjs.org (posible nombre inventado o tomado por un atacante)
+```
+Un paquete puede estar archivado sin ningún CVE, y los agentes de IA lo siguen instalando porque su conocimiento quedó congelado. Los abandonados (sin versiones en 24 meses o más) solo avisan. `--sin-estado` salta esta revisión.
+
+Sale con 1 si hay vulnerabilidades o paquetes obsoletos/retirados/inexistentes, y con 2 si OSV.dev no responde.
+
+### Adoptarlo en CI sin romper builds
+`--warn-only` (en cualquier comando) muestra todo pero sale con 0. En la Action: `warn-only: true`.
 
 ### trifecta
 ```bash
@@ -99,18 +110,18 @@ agentguard scan ~/.claude/skills --deep    # pide confirmación antes de enviar
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
 Con `lang: en` la salida y las anotaciones salen en inglés:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
   with:
     lang: en
 ```
 Con `deep: true` también corre el chequeo semántico. **Envía el contenido revisado del PR a Anthropic.** Pasa la clave por `env`; en PRs desde forks no hay secretos y `--deep` se salta sin fallar:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.5.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
   with:
     deep: true            # deep-fail-on: high para que un ALTO del juez falle el build
   env:

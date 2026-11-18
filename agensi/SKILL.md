@@ -5,7 +5,7 @@ description: Security check for the skills (SKILL.md) and MCP servers an AI agen
 
 # agentguard
 
-Local security layer for AI agents. Runs on the user's machine; only `cve` (and `audit` without `--offline`) calls the network, to query OSV.dev. The optional `--deep` check (section 5) is the only feature that sends file content off the machine, and only when the user asks for it.
+Local security layer for AI agents. Runs on the user's machine; only `cve` (and `audit` without `--offline`) calls the network, to query OSV.dev and the npm/PyPI registries (package names only). The optional `--deep` check (section 5) is the only feature that sends file content off the machine, and only when the user asks for it.
 
 Source: https://github.com/OnlyEdgeAdmin59/agentguard · PyPI: `agentguard-scan`
 
@@ -27,7 +27,7 @@ If `agentguard` is not on PATH, use `python -m agentguard`.
 | Check a skill/plugin folder before trusting it | `agentguard scan <folder> --lang en` |
 | Approve the current state of a folder | `agentguard lock <folder> --lang en` |
 | Check whether anything changed since approval | `agentguard verify <folder> --lang en` |
-| Known vulnerabilities in installed MCP servers | `agentguard cve --lang en` |
+| Known vulnerabilities and deprecated/nonexistent packages in installed MCP servers | `agentguard cve --lang en` |
 | Data-exfiltration risk across MCP tools | `agentguard trifecta [folder] [--tools dir] --lang en` |
 | One full report | `agentguard audit --skills <folder> --out agentguard-report.md --lang en` |
 

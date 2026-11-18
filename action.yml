@@ -18,6 +18,9 @@ inputs:
   deep:
     description: "Juicio semántico con un modelo de IA (true/false). Envía el contenido revisado a Anthropic; necesita ANTHROPIC_API_KEY en el env del paso"
     default: "false"
+  warn-only:
+    description: "Muestra los hallazgos pero no hace fallar el job (true/false). Útil para adoptarlo sin romper el CI"
+    default: "false"
   deep-fail-on:
     description: "Con deep: 'high' hace fallar el job si el juez marca ALTO. Vacío = solo avisa"
     default: ""
@@ -34,6 +37,7 @@ runs:
         AGENTGUARD_LANG: ${{ inputs.lang }}
         AG_DEEP: ${{ inputs.deep }}
         AG_DEEP_FAIL: ${{ inputs.deep-fail-on }}
+        AG_WARN_ONLY: ${{ inputs.warn-only }}
       run: |
         set +e
         deep_args=()
@@ -58,4 +62,10 @@ runs:
           echo "## 🛡️ agentguard"
           echo '```'; grep -hv "^::" /tmp/ag_scan.txt /tmp/ag_verify.txt 2>/dev/null; echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
-        if [ "$scan" = "1" ] || [ "$verify" = "1" ]; then exit 1; fi
+        if [ "$scan" = "1" ] || [ "$verify" = "1" ]; then
+          if [ "$AG_WARN_ONLY" = "true" ]; then
+            echo "::warning title=agentguard::hay hallazgos; warn-only=true, el job no falla"
+            exit 0
+          fi
+          exit 1
+        fi
