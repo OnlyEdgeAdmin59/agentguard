@@ -126,6 +126,35 @@ EN: dict[str, str] = {
         "an attacker can register a made-up name.",
     "Busca una alternativa mantenida o revisa su código antes de seguir usándolo.":
         "Find a maintained alternative or review its code before you keep using it.",
+    # tokens
+    "token sin vencimiento": "token without expiry", "token vencido": "expired token",
+    "token por vencer": "token expiring soon", "certificado no encontrado": "certificate not found",
+    "certificado no leído": "certificate not read", "certificado vencido": "expired certificate",
+    "certificado por vencer": "certificate expiring soon", "secreto en texto plano": "plaintext secret",
+    "JWT sin fecha de vencimiento (exp): si se filtra, sirve para siempre":
+        "JWT without an expiry date (exp): if it leaks, it works forever",
+    "JWT vencido el {date}: el servidor va a fallar": "JWT expired on {date}: the server will fail",
+    "JWT vence el {date} (en {days} día(s))": "JWT expires on {date} (in {days} day(s))",
+    "el archivo {path} no existe: el servidor puede fallar al conectar":
+        "file {path} does not exist: the server may fail to connect",
+    "no se pudo leer la fecha de {path} (¿no es PEM?): revísalo a mano":
+        "could not read the date of {path} (not PEM?): check it manually",
+    "{path} venció el {date}": "{path} expired on {date}",
+    "{path} vence el {date} (en {days} día(s))": "{path} expires on {date} (in {days} day(s))",
+    "token {type} escrito en el archivo: {masked}": "{type} token written in the file: {masked}",
+    "valor literal en {key}: {masked}": "literal value in {key}: {masked}",
+    "clave dentro de la URL": "key inside the URL",
+    "(sin credenciales vencidas, por vencer ni en texto plano)":
+        "(no expired, expiring or plaintext credentials)",
+    "\n{servers} servidor(es), {findings} hallazgo(s), {serious} ALTO/MEDIO. No se usó la red.":
+        "\n{servers} server(s), {findings} finding(s), {serious} HIGH/MEDIUM. No network used.",
+    "Renueva la credencial y cámbiala en la config.": "Renew the credential and update it in the config.",
+    "Muévelo a una variable de entorno (`${VAR}` / `${env:VAR}`) y rota la clave si el archivo se compartió.":
+        "Move it to an environment variable (`${VAR}` / `${env:VAR}`) and rotate the key if the file was shared.",
+    "Usa tokens con vencimiento y permisos mínimos.": "Use tokens with an expiry and minimal permissions.",
+    "Revisa la ruta del certificado en la config.": "Check the certificate path in the config.",
+    "**tokens**: {n} credencial(es) vencida(s), por vencer o en texto plano.":
+        "**tokens**: {n} expired, expiring or plaintext credential(s).",
     # --warn-only
     "[INFO] --warn-only: hay hallazgos, pero el código de salida queda en 0.":
         "[INFO] --warn-only: there are findings, but the exit code stays 0.",

@@ -28,6 +28,7 @@ If `agentguard` is not on PATH, use `python -m agentguard`.
 | Approve the current state of a folder | `agentguard lock <folder> --lang en` |
 | Check whether anything changed since approval | `agentguard verify <folder> --lang en` |
 | Known vulnerabilities and deprecated/nonexistent packages in installed MCP servers | `agentguard cve --lang en` |
+| Expired, expiring or plaintext credentials in MCP configs (offline) | `agentguard tokens --lang en` |
 | Data-exfiltration risk across MCP tools | `agentguard trifecta [folder] [--tools dir] --lang en` |
 | One full report | `agentguard audit --skills <folder> --out agentguard-report.md --lang en` |
 

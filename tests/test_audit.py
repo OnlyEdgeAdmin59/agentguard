@@ -114,7 +114,7 @@ class Comando(unittest.TestCase):
     def test_version(self):
         code, out = quiet(agentguard.main, ["agentguard", "--version"])
         self.assertEqual((code, out.strip()), (0, f"agentguard {agentguard.__version__}"))
-        self.assertEqual(agentguard.__version__, "0.6.0")
+        self.assertEqual(agentguard.__version__, "0.7.0")
 
 
 if __name__ == "__main__":
