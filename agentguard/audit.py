@@ -1,4 +1,4 @@
-"""Reporte de auditoría en Markdown: junta scan, cve y trifecta.
+"""Reporte de auditoría en Markdown: junta scan, cve, tokens y trifecta.
 
 Uso: agentguard audit [--skills carpeta] [--config archivo] [--proyecto carpeta] [--tools carpeta]
                       [--sin-red] [--out reporte.md]
@@ -185,6 +185,30 @@ def audit_status(servers: list, status_fn, out: Audit) -> None:
     out.resumen.append(t("**estado**: {n} paquete(s) obsoleto(s), retirado(s) o inexistente(s) en npm/PyPI.", n=serious))
 
 
+TOKEN_FIX = {
+    "token vencido": "Renueva la credencial y cámbiala en la config.",
+    "token por vencer": "Renueva la credencial y cámbiala en la config.",
+    "certificado vencido": "Renueva la credencial y cámbiala en la config.",
+    "certificado por vencer": "Renueva la credencial y cámbiala en la config.",
+    "secreto en texto plano": "Muévelo a una variable de entorno (`${VAR}` / `${env:VAR}`) y rota la clave si el archivo se compartió.",
+    "token sin vencimiento": "Usa tokens con vencimiento y permisos mínimos.",
+    "certificado no encontrado": "Revisa la ruta del certificado en la config.",
+    "certificado no leído": "Revisa la ruta del certificado en la config.",
+}
+TOKEN_LEVEL = {"ALTO": "Alto", "MEDIO": "Medio", "INFO": "Info"}
+
+
+def audit_tokens(config: Path | None, project: Path, out: Audit) -> None:
+    from .tokens import scan_tokens
+    _, findings = scan_tokens(config or project)
+    for f in findings:
+        client, _, rest = f.where.partition(" · ")
+        out.items.append(Item(TOKEN_LEVEL[f.level], "tokens", t(f.kind), f"{t(client)} · {rest}",
+                              t(f.detail, **dict(f.values)), t(TOKEN_FIX[f.kind])))
+    serious = sum(1 for f in findings if f.level in ("ALTO", "MEDIO"))
+    out.resumen.append(t("**tokens**: {n} credencial(es) vencida(s), por vencer o en texto plano.", n=serious))
+
+
 def audit_trifecta(scopes: dict, out: Audit) -> None:
     hits = 0
     for label, group in scopes.items():
@@ -219,6 +243,7 @@ def build(skills: Path | None = None, config: Path | None = None, project: Path 
     servers = servers_from_file("archivo", config) if config else inventory(project=project)
     audit_cve(servers, check_fn, out)
     audit_status(servers, status_fn, out)
+    audit_tokens(config, project, out)
     if config:
         scopes = {f"archivo · {k}": v for k, v in scopes_of(config, tools_dir).items()}
     else:

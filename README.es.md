@@ -6,6 +6,7 @@ Seguridad para agentes de IA que usan skills y servidores MCP. Funciona en tu m�
 
 - `scan`: busca instrucciones ocultas (tool poisoning) en skills (`SKILL.md`) y herramientas MCP (JSON).
 - `lock` / `verify`: avisa si un conector cambió después de aprobarlo (rug pull).
+- `tokens`: credenciales vencidas, por vencer o en texto plano en las configs MCP (sin red).
 - `cve`: revisa los servidores MCP instalados contra vulnerabilidades conocidas (OSV.dev) y marca paquetes obsoletos, retirados o inexistentes en npm/PyPI.
 - `trifecta`: avisa si tu configuración junta la "tríada letal" (datos privados + contenido no confiable + salida hacia afuera).
 - `audit`: junta todo en un reporte de auditoría en Markdown.
@@ -62,6 +63,17 @@ Un paquete puede estar archivado sin ningún CVE, y los agentes de IA lo siguen 
 
 Sale con 1 si hay vulnerabilidades o paquetes obsoletos/retirados/inexistentes, y con 2 si OSV.dev no responde.
 
+### tokens
+```bash
+agentguard tokens                       # configs MCP instaladas
+agentguard tokens ~/.cursor/mcp.json    # un archivo
+```
+```
+[MEDIO] secreto en texto plano — Cursor · github · env.GITHUB_PERSONAL_ACCESS_TOKEN: token GitHub escrito en el archivo: ghp_…[40]
+[ALTO] token vencido — Claude Code · api · headers.Authorization: JWT vencido el 2026-11-01: el servidor va a fallar
+```
+Tokens JWT y certificados vencidos o por vencer, y claves escritas en texto plano. Sin red; nunca muestra el secreto.
+
 ### Adoptarlo en CI sin romper builds
 `--warn-only` (en cualquier comando) muestra todo pero sale con 0. En la Action: `warn-only: true`.
 
@@ -110,18 +122,18 @@ agentguard scan ~/.claude/skills --deep    # pide confirmación antes de enviar
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.7.0
 ```
 Falla el build si hay hallazgos ALTOS y los marca en la línea del PR.
 Con `lang: en` la salida y las anotaciones salen en inglés:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.7.0
   with:
     lang: en
 ```
 Con `deep: true` también corre el chequeo semántico. **Envía el contenido revisado del PR a Anthropic.** Pasa la clave por `env`; en PRs desde forks no hay secretos y `--deep` se salta sin fallar:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.7.0
   with:
     deep: true            # deep-fail-on: high para que un ALTO del juez falle el build
   env:

@@ -11,6 +11,8 @@ Uso:
   agentguard verify <carpeta>   alerta si algo cambió (rug pull)
   agentguard cve [carpeta]      CVE conocidos (OSV.dev) y paquetes obsoletos, retirados o
                                 inexistentes en npm/PyPI (--sin-estado para no consultarlo)
+  agentguard tokens [carpeta]   tokens y certificados vencidos o por vencer, y claves en texto
+                                plano en las configs MCP (sin red; --dias N, por defecto 14)
   agentguard trifecta [carpeta] [--tools dir]
                                 tríada letal: datos privados + contenido no confiable + salida
   agentguard audit [--skills dir] [--config archivo] [--sin-red] [--out reporte.md]
@@ -42,6 +44,8 @@ Usage:
   agentguard verify <folder>   alert if anything changed (rug pull)
   agentguard cve [folder]      known CVEs (OSV.dev) and deprecated, yanked or nonexistent
                                packages on npm/PyPI (--no-status to skip it)
+  agentguard tokens [folder]   expired or expiring tokens and certificates, and plaintext keys
+                               in MCP configs (offline; --days N, default 14)
   agentguard trifecta [folder] [--tools dir]
                                lethal trifecta: private data + untrusted content + outbound
   agentguard audit [--skills dir] [--config file] [--project dir] [--tools dir] [--offline] [--out report.md]
@@ -151,6 +155,9 @@ def dispatch(argv: list[str]) -> int:
     if len(argv) >= 2 and argv[1] == "cve":
         from .cve import cmd_cve  # import tardío: scan/lock/verify no lo necesitan
         return cmd_cve(argv[2:])
+    if len(argv) >= 2 and argv[1] == "tokens":
+        from .tokens import cmd_tokens
+        return cmd_tokens(argv[2:])
     if len(argv) >= 2 and argv[1] == "trifecta":
         from .trifecta import cmd_trifecta
         return cmd_trifecta(argv[2:])

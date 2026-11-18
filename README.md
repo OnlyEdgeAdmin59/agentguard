@@ -6,6 +6,7 @@ Security for AI agents that use skills and MCP servers. Runs on your machine, no
 
 - `scan`: looks for hidden instructions (tool poisoning) in skills (`SKILL.md`) and MCP tools (JSON).
 - `lock` / `verify`: warns if a connector changed after you approved it (rug pull).
+- `tokens`: expired, expiring or plaintext credentials in MCP configs (offline).
 - `cve`: checks installed MCP servers against known vulnerabilities (OSV.dev) and flags deprecated, yanked or nonexistent packages on npm/PyPI.
 - `trifecta`: warns if your setup combines the "lethal trifecta" (private data + untrusted content + a way out).
 - `audit`: puts it all together in a Markdown audit report.
@@ -60,6 +61,17 @@ A package can be archived with no CVE at all, and AI agents still install it bec
 
 Exits with 1 if there are vulnerabilities or deprecated/yanked/nonexistent packages, and with 2 if OSV.dev is unreachable.
 
+### tokens
+```bash
+agentguard tokens --lang en                       # installed MCP configs
+agentguard tokens ~/.cursor/mcp.json --lang en    # a single file
+```
+```
+[MEDIUM] plaintext secret — Cursor · github · env.GITHUB_PERSONAL_ACCESS_TOKEN: GitHub token written in the file: ghp_…[40]
+[HIGH] expired token — Claude Code · api · headers.Authorization: JWT expired on 2026-11-01: the server will fail
+```
+Expired or expiring JWTs and certificates, and keys written in plaintext. Offline; never prints the secret.
+
 ### Adopting in CI without breaking builds
 `--warn-only` (any command) prints every finding but exits 0. In the Action: `warn-only: true`.
 
@@ -99,14 +111,14 @@ agentguard scan ~/.claude/skills --deep                    # asks for confirmati
 ## GitHub Action
 ```yaml
 - uses: actions/checkout@v5
-- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.7.0
   with:
     lang: en
 ```
 Fails the build on HIGH findings and marks them on the PR line.
 With `deep: true` it also runs the semantic check. **It sends the reviewed PR content to Anthropic.** Pass the key through `env`; on PRs from forks there are no secrets and `--deep` is skipped without failing:
 ```yaml
-- uses: OnlyEdgeAdmin59/agentguard@v0.6.0
+- uses: OnlyEdgeAdmin59/agentguard@v0.7.0
   with:
     deep: true            # deep-fail-on: high to make a HIGH from the judge fail the build
   env:

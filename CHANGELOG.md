@@ -1,5 +1,17 @@
 # Cambios
 
+## 0.7.0
+
+### Nuevo
+- **`agentguard tokens [carpeta | archivo]`**: revisa las credenciales de las configs MCP (env, headers, args y url). Todo local, sin red.
+  - **JWT**: lee `exp` (sin verificar firma). Vencido → ALTO ("el servidor va a fallar"); vence en 14 días o menos → MEDIO (`--dias N` para cambiarlo); sin `exp` → INFO.
+  - **Certificados** (`NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`, rutas `.pem/.crt/.cer`): vencido → ALTO; vence en 30 días o menos → MEDIO; archivo que no existe → MEDIO.
+  - **Claves en texto plano**: formatos conocidos (GitHub, GitLab, Anthropic, OpenAI, Slack, AWS, Google, Notion, Linear, Firecrawl, Stripe), variables *TOKEN/*KEY/*SECRET/*PASSWORD con valor literal, y claves dentro de la URL → MEDIO, con la recomendación de pasarlas a `${VAR}`.
+  - Nunca muestra el secreto: solo dónde está, el tipo, los primeros 4 caracteres y el largo.
+  - Las referencias (`${VAR}`, `${env:VAR}`, `$VAR`, `%VAR%`) y los marcadores (`<tu-token>`, `your-token-here`) no cuentan.
+  - Motivo: caso DHS (un certificado vencido dejó al personal sin sistemas).
+  - Sale con 1 si hay ALTO o MEDIO. `audit` lo incluye (sección **tokens**).
+
 ## 0.6.0
 
 ### Nuevo
